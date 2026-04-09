@@ -2,7 +2,9 @@
 
 AI predictions for the 2025-26 UEFA Champions League winner, from the quarterfinal stage onwards.
 
-Uses **TSFM + Club Elo + Bradley-Terry + Monte Carlo** architecture. Compares predictions against Polymarket odds to find edges.
+Uses **TSFM + Club Elo + Poisson Scoreline + Monte Carlo** architecture. Compares predictions against Polymarket odds to find edges.
+
+**Author:** [YSKM](https://github.com/YSKM523) | **License:** MIT | **Language:** Python
 
 Sister projects: [worldcup-oracle](../worldcup-oracle) | [fin-forecast-arena](../fin-forecast-arena)
 
@@ -165,3 +167,7 @@ ln -sf /home/ubuntu/fin-forecast-arena/venv venv
 source venv/bin/activate
 python run_predictions.py
 ```
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.
