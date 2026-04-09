@@ -44,13 +44,12 @@ def run_elo_baseline() -> tuple[pd.DataFrame, dict[str, float]]:
     print(f"\n[3/3] Running {MONTE_CARLO_SIMULATIONS:,} Monte Carlo simulations …")
     results_df = run_monte_carlo(elos, n_simulations=MONTE_CARLO_SIMULATIONS)
 
-    print(f"\n{'Team':20s} {'QF Adv':>8s} {'SF Adv':>8s} {'Final':>8s} {'Champion':>8s}")
-    print("-" * 56)
+    print(f"\n{'Team':20s} {'QF Adv':>8s} {'Final':>8s} {'Champion':>8s}")
+    print("-" * 48)
     for _, row in results_df.iterrows():
         print(
             f"  {row['team']:20s}"
             f" {row['P(qf_advance)']:7.1%}"
-            f" {row['P(sf_advance)']:7.1%}"
             f" {row['P(final)']:7.1%}"
             f" {row['P(champion)']:7.1%}"
         )
@@ -170,10 +169,8 @@ def run_tsfm_predictions() -> tuple[pd.DataFrame, dict[str, float]]:
     print("\n[2/4] Running TSFM models (Chronos-2, TimesFM-2.5, FlowState) …")
     forecasts = forecast_all_teams(weekly_series)
 
-    # Extract forecasted Elo at QF time (week 1) for Monte Carlo
-    # We use week 1 since QF is next week; for SF/Final we could use later weeks
-    # but for simplicity use week 1 (current form is most relevant)
-    model_elos = get_elo_at_week(forecasts, week_index=1)
+    # Extract forecasted Elo at QF time (week 0 = first forecast week)
+    model_elos = get_elo_at_week(forecasts, week_index=0)
 
     # Also include Elo baseline as a "model"
     current_elos = fetch_current_elos()
@@ -187,7 +184,7 @@ def run_tsfm_predictions() -> tuple[pd.DataFrame, dict[str, float]]:
         model_tournament_probs[model_name] = {}
         for _, row in mc_df.iterrows():
             model_tournament_probs[model_name][row["team"]] = {
-                s: row[f"P({s})"] for s in ["qf_advance", "sf_advance", "final", "champion"]
+                s: row[f"P({s})"] for s in ["qf_advance", "final", "champion"]
             }
         champ_top = mc_df.iloc[0]
         print(f"  {model_name:15s}: top pick = {champ_top['team']} ({champ_top['P(champion)']:.1%})")
@@ -200,7 +197,7 @@ def run_tsfm_predictions() -> tuple[pd.DataFrame, dict[str, float]]:
     rows = []
     for team in sorted(ensemble_probs.keys()):
         row = {"team": team}
-        for stage in ["qf_advance", "sf_advance", "final", "champion"]:
+        for stage in ["qf_advance", "final", "champion"]:
             row[f"P({stage})"] = ensemble_probs[team][stage]
         rows.append(row)
     ensemble_df = pd.DataFrame(rows).sort_values("P(champion)", ascending=False).reset_index(drop=True)

@@ -36,11 +36,24 @@ FIRST_LEG_RESULTS = {
     "QF4": {"home": "Sporting CP", "away": "Arsenal", "home_goals": 0, "away_goals": 1},
 }
 
-# Bracket structure: SF and Final
+# ── Bracket structure (from the official Feb 27 draw) ─────────────────────
+# SF home/away is fixed by bracket position, NOT by seeding.
+# In each SF pairing, the team from the "bottom" QF in the bracket gets
+# second-leg home (first arg = first-leg home = top QF winner).
+# Source: UEFA official draw — bracket positions determine order.
+#   SF1: QF1 winner (top) vs QF2 winner (bottom) → QF2 winner has 2nd-leg home
+#   SF2: QF3 winner (top) vs QF4 winner (bottom) → QF4 winner has 2nd-leg home
 BRACKET = {
-    "SF1": ("QF1", "QF2"),   # Silver path (top half)
-    "SF2": ("QF3", "QF4"),   # Blue path (bottom half)
+    "SF1": ("QF1", "QF2"),   # Silver path — QF2 winner gets 2nd-leg home
+    "SF2": ("QF3", "QF4"),   # Blue path — QF4 winner gets 2nd-leg home
     "Final": ("SF1", "SF2"),
+}
+
+# For each SF: which QF slot's winner gets second-leg home (= "bottom" in bracket).
+# The other QF slot's winner is first-leg home (= "top" in bracket).
+SF_SECOND_LEG_HOME = {
+    "SF1": "QF2",   # QF2 winner gets 2nd-leg home
+    "SF2": "QF4",   # QF4 winner gets 2nd-leg home
 }
 
 # ── clubelo.com API ────────────────────────────────────────────────────────

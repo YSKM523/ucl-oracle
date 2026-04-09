@@ -104,11 +104,10 @@ class TestRunMonteCarlo:
         assert set(results["team"]) == set(UCL_TEAMS)
 
     def test_qf_advance_monotonic(self):
-        """Teams that advance from QF should also appear in later stages."""
+        """Stage probabilities must be non-increasing: QF ≥ Final ≥ Champion."""
         results = run_monte_carlo(FALLBACK_ELO, n_simulations=5_000, seed=42)
         for _, row in results.iterrows():
-            assert row["P(qf_advance)"] >= row["P(sf_advance)"]
-            assert row["P(sf_advance)"] >= row["P(final)"]
+            assert row["P(qf_advance)"] >= row["P(final)"]
             assert row["P(final)"] >= row["P(champion)"]
 
     def test_arsenal_is_favorite(self):

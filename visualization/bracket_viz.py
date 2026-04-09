@@ -14,12 +14,13 @@ from config import FIRST_LEG_RESULTS, PLOTS_DIR
 def plot_bracket(
     results_df,
     save_path=None,
+    subtitle: str = "TSFM Ensemble (Chronos-2 + TimesFM-2.5 + FlowState + Elo)",
 ):
     """Draw UCL knockout bracket with probabilities.
 
     Parameters
     ----------
-    results_df : DataFrame with columns team, P(qf_advance), P(sf_advance), P(final), P(champion)
+    results_df : DataFrame with columns team, P(qf_advance), P(final), P(champion)
     """
     if save_path is None:
         save_path = PLOTS_DIR / "ucl_bracket.png"
@@ -28,7 +29,6 @@ def plot_bracket(
     for _, row in results_df.iterrows():
         probs[row["team"]] = {
             "qf": row["P(qf_advance)"],
-            "sf": row["P(sf_advance)"],
             "final": row["P(final)"],
             "champ": row["P(champion)"],
         }
@@ -96,17 +96,17 @@ def plot_bracket(
     # ── SF column ───────────────────────────────────────────────────────
     sf_x = 33
 
-    # Silver path SF
+    # Silver path SF — show P(qf_advance) i.e. "probability of reaching this stage"
     sf1_teams = [fl["QF1"]["home"], fl["QF1"]["away"], fl["QF2"]["home"], fl["QF2"]["away"]]
-    sf1_top2 = sorted(sf1_teams, key=lambda t: probs[t]["sf"], reverse=True)[:2]
-    draw_team_box(sf_x, 43, sf1_top2[0], probs[sf1_top2[0]]["sf"])
-    draw_team_box(sf_x, 37, sf1_top2[1], probs[sf1_top2[1]]["sf"])
+    sf1_top2 = sorted(sf1_teams, key=lambda t: probs[t]["qf"], reverse=True)[:2]
+    draw_team_box(sf_x, 43, sf1_top2[0], probs[sf1_top2[0]]["qf"])
+    draw_team_box(sf_x, 37, sf1_top2[1], probs[sf1_top2[1]]["qf"])
 
-    # Blue path SF
+    # Blue path SF — same: P(qf_advance)
     sf2_teams = [fl["QF3"]["home"], fl["QF3"]["away"], fl["QF4"]["home"], fl["QF4"]["away"]]
-    sf2_top2 = sorted(sf2_teams, key=lambda t: probs[t]["sf"], reverse=True)[:2]
-    draw_team_box(sf_x, 21, sf2_top2[0], probs[sf2_top2[0]]["sf"])
-    draw_team_box(sf_x, 15, sf2_top2[1], probs[sf2_top2[1]]["sf"])
+    sf2_top2 = sorted(sf2_teams, key=lambda t: probs[t]["qf"], reverse=True)[:2]
+    draw_team_box(sf_x, 21, sf2_top2[0], probs[sf2_top2[0]]["qf"])
+    draw_team_box(sf_x, 15, sf2_top2[1], probs[sf2_top2[1]]["qf"])
 
     ax.text(sf_x + 11, 52, "SEMI-FINALS", fontsize=10, fontweight="bold",
             ha="center", color="#333")
@@ -144,7 +144,7 @@ def plot_bracket(
     ax.plot([83, 82], [29, 32], **line_kw)
 
     # ── Legend ──────────────────────────────────────────────────────────
-    ax.text(50, 3, "Probabilities from TSFM ensemble (Chronos-2 + TimesFM-2.5 + FlowState + Elo) × 50K Monte Carlo",
+    ax.text(50, 3, f"Probabilities from {subtitle} \u00d7 50K Monte Carlo",
             fontsize=8, ha="center", color="#888")
     ax.text(50, 1, "Darker green = higher probability | clubelo.com ratings | No away goals rule",
             fontsize=7, ha="center", color="#aaa")
@@ -155,7 +155,7 @@ def plot_bracket(
     print(f"  Saved bracket: {save_path}")
 
 
-def plot_probability_bars(results_df, save_path=None):
+def plot_probability_bars(results_df, save_path=None, subtitle: str = "TSFM Ensemble"):
     """Horizontal bar chart of P(champion) for all 8 teams."""
     if save_path is None:
         save_path = PLOTS_DIR / "champion_probabilities.png"
@@ -173,7 +173,7 @@ def plot_probability_bars(results_df, save_path=None):
                 f"{row['P(champion)']:.1%}", va="center", fontsize=10, fontweight="bold")
 
     ax.set_xlabel("P(Champion) %", fontsize=12)
-    ax.set_title("2025-26 UCL Winner Probabilities\n(TSFM Ensemble, 50K Monte Carlo)",
+    ax.set_title(f"2025-26 UCL Winner Probabilities\n({subtitle}, 50K Monte Carlo)",
                  fontsize=13, fontweight="bold")
     ax.set_xlim(0, max(df["P(champion)"] * 100) * 1.15)
     ax.grid(axis="x", alpha=0.3)

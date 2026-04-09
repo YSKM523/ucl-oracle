@@ -18,11 +18,11 @@ from config import (
     FIRST_LEG_RESULTS,
     KNOCKOUT_PENALTY_ADVANTAGE,
     MONTE_CARLO_SIMULATIONS,
+    SF_SECOND_LEG_HOME,
     UCL_HOME_ADVANTAGE_ELO,
     UCL_TEAMS,
 )
 from prediction.match_predictor import (
-    knockout_probabilities,
     simulate_extra_time,
     simulate_leg,
     simulate_penalties,
@@ -30,7 +30,7 @@ from prediction.match_predictor import (
 
 log = logging.getLogger(__name__)
 
-STAGES = ["qf_advance", "sf_advance", "final", "champion"]
+STAGES = ["qf_advance", "final", "champion"]
 
 
 def resolve_aggregate(
@@ -151,12 +151,34 @@ def simulate_final(
     elo_ratings: dict[str, float],
     rng: np.random.Generator,
 ) -> str:
-    """Simulate the single-leg final at a neutral venue."""
+    """Simulate the single-leg final at a neutral venue (Budapest).
+
+    Uses the same Poisson scoreline model as two-legged ties:
+    90 min → if draw → 30 min ET → if still draw → penalties.
+    """
     elo_a = elo_ratings[team_a]
     elo_b = elo_ratings[team_b]
+    ha = FINAL_HOME_ADVANTAGE_ELO  # 0 for neutral venue
 
-    probs = knockout_probabilities(elo_a, elo_b, home_advantage=FINAL_HOME_ADVANTAGE_ELO)
-    return team_a if rng.random() < probs["win_a"] else team_b
+    # 90 minutes
+    goals_a, goals_b = simulate_leg(elo_a, elo_b, ha, rng)
+    if goals_a > goals_b:
+        return team_a
+    if goals_b > goals_a:
+        return team_b
+
+    # Extra time (30 min at same neutral venue)
+    et_a, et_b = simulate_extra_time(elo_a, elo_b, ha, rng)
+    goals_a += et_a
+    goals_b += et_b
+    if goals_a > goals_b:
+        return team_a
+    if goals_b > goals_a:
+        return team_b
+
+    # Penalties
+    winner = simulate_penalties(elo_a, elo_b, rng)
+    return team_a if winner == "a" else team_b
 
 
 def simulate_bracket(
@@ -182,6 +204,10 @@ def simulate_bracket(
         result[winner] = "qf_advance"
 
     # ── Semi-finals (two-legged ties, both legs simulated) ──────────────
+    # Home/away is fixed by the official draw bracket position.
+    # SF_SECOND_LEG_HOME tells us which QF slot's winner gets 2nd-leg home.
+    # simulate_two_leg_tie(first_leg_home, second_leg_home) — first arg plays
+    # at home in leg 1, second arg plays at home in leg 2.
     sf_winners = {}
     for sf_id, (qf_a_id, qf_b_id) in BRACKET.items():
         if sf_id == "Final":
@@ -189,10 +215,12 @@ def simulate_bracket(
         team_a = qf_winners[qf_a_id]
         team_b = qf_winners[qf_b_id]
 
-        # Randomly assign home/away for SF (UEFA draws this; we simulate 50/50)
-        if rng.random() < 0.5:
+        second_leg_home_qf = SF_SECOND_LEG_HOME[sf_id]
+        if second_leg_home_qf == qf_b_id:
+            # team_b gets 2nd-leg home → team_a is 1st-leg home
             winner = simulate_two_leg_tie(team_a, team_b, elo_ratings, rng)
         else:
+            # team_a gets 2nd-leg home → team_b is 1st-leg home
             winner = simulate_two_leg_tie(team_b, team_a, elo_ratings, rng)
 
         sf_winners[sf_id] = winner
@@ -223,7 +251,7 @@ def run_monte_carlo(
 
     Returns
     -------
-    DataFrame with columns: team, P(qf_advance), P(sf_advance), P(final), P(champion)
+    DataFrame with columns: team, P(qf_advance), P(final), P(champion)
     Sorted by P(champion) descending.
     """
     if first_leg_results is None:
@@ -231,10 +259,10 @@ def run_monte_carlo(
 
     rng = np.random.default_rng(seed)
 
-    stage_rank = {s: i for i, s in enumerate([
-        "qf_eliminated", "qf_advance", "sf_eliminated",
-        "sf_advance", "runner_up", "champion",
-    ])}
+    # Stages that imply "at least reached X"
+    _REACHED_QF_ADVANCE = {"qf_advance", "sf_eliminated", "sf_advance", "runner_up", "champion"}
+    _REACHED_FINAL = {"runner_up", "champion"}
+    _REACHED_CHAMPION = {"champion"}
 
     counters: dict[str, dict[str, int]] = defaultdict(
         lambda: {s: 0 for s in STAGES}
@@ -245,16 +273,12 @@ def run_monte_carlo(
         result = simulate_bracket(elo_ratings, first_leg_results, rng)
 
         for team, stage in result.items():
-            team_rank = stage_rank.get(stage, 0)
-            for s in STAGES:
-                if s == "qf_advance" and team_rank >= stage_rank["qf_advance"]:
-                    counters[team][s] += 1
-                elif s == "sf_advance" and team_rank >= stage_rank["sf_advance"]:
-                    counters[team][s] += 1
-                elif s == "final" and team_rank >= stage_rank["runner_up"]:
-                    counters[team][s] += 1
-                elif s == "champion" and team_rank >= stage_rank["champion"]:
-                    counters[team][s] += 1
+            if stage in _REACHED_QF_ADVANCE:
+                counters[team]["qf_advance"] += 1
+            if stage in _REACHED_FINAL:
+                counters[team]["final"] += 1
+            if stage in _REACHED_CHAMPION:
+                counters[team]["champion"] += 1
 
         if (sim + 1) % 10000 == 0:
             log.info("  %d / %d simulations complete", sim + 1, n_simulations)
@@ -282,13 +306,12 @@ if __name__ == "__main__":
     results = run_monte_carlo(elos, n_simulations=50_000)
 
     print("\n2025-26 UCL Predictions (50K simulations, Elo-only baseline):")
-    print(f"{'Team':20s} {'QF Adv%':>8} {'SF Adv%':>8} {'Final%':>8} {'Win%':>8}")
-    print("-" * 56)
+    print(f"{'Team':20s} {'QF Adv%':>8} {'Final%':>8} {'Win%':>8}")
+    print("-" * 48)
     for _, row in results.iterrows():
         print(
             f"{row['team']:20s} "
             f"{row['P(qf_advance)']:7.1%} "
-            f"{row['P(sf_advance)']:7.1%} "
             f"{row['P(final)']:7.1%} "
             f"{row['P(champion)']:7.1%}"
         )

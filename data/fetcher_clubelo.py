@@ -43,38 +43,41 @@ def fetch_current_elos(date: str | None = None) -> dict[str, float]:
     if date is None:
         date = datetime.now().strftime("%Y-%m-%d")
 
+    # Fetch from API
     try:
         resp = _SESSION.get(f"{CLUBELO_API_BASE}/{date}", timeout=30)
         resp.raise_for_status()
-
         df = pd.read_csv(io.StringIO(resp.text), header=0)
-        # Columns: Rank, Club, Country, Level, Elo, From, To
+    except requests.RequestException as e:
+        log.warning("clubelo.com API failed (%s), using fallback Elo", e)
+        return dict(FALLBACK_ELO)
 
-        elos = {}
-        for _, row in df.iterrows():
-            club_name = str(row["Club"]).strip()
-            if club_name in CLUBELO_TO_CANONICAL:
-                canonical = CLUBELO_TO_CANONICAL[club_name]
-                elos[canonical] = float(row["Elo"])
+    # Parse response — errors here are bugs, not transient failures
+    elos = {}
+    for _, row in df.iterrows():
+        club_name = str(row["Club"]).strip()
+        if club_name in CLUBELO_TO_CANONICAL:
+            canonical = CLUBELO_TO_CANONICAL[club_name]
+            elos[canonical] = float(row["Elo"])
 
-        if len(elos) == len(UCL_TEAMS):
-            log.info("Fetched Elo for all %d teams from clubelo.com", len(elos))
-            # Cache
-            cache_df = pd.DataFrame([
-                {"team": t, "elo": e, "date": date} for t, e in elos.items()
-            ])
-            cache_df.to_parquet(CURRENT_ELOS_CACHE)
-            return elos
-
-        missing = set(UCL_TEAMS) - set(elos.keys())
+    missing = set(UCL_TEAMS) - set(elos.keys())
+    if missing:
         log.warning("Missing teams from API: %s — filling from fallback", missing)
         for team in missing:
             elos[team] = FALLBACK_ELO[team]
-        return elos
+    else:
+        log.info("Fetched Elo for all %d teams from clubelo.com", len(elos))
 
-    except (requests.RequestException, Exception) as e:
-        log.warning("clubelo.com API failed (%s), using fallback Elo", e)
-        return dict(FALLBACK_ELO)
+    # Cache is best-effort — never mask live data with a write failure
+    try:
+        cache_df = pd.DataFrame([
+            {"team": t, "elo": e, "date": date} for t, e in elos.items()
+        ])
+        cache_df.to_parquet(CURRENT_ELOS_CACHE)
+    except Exception as e:
+        log.warning("Failed to cache Elo to parquet: %s", e)
+
+    return elos
 
 
 def fetch_club_history(team: str, force: bool = False) -> pd.DataFrame:
@@ -93,31 +96,41 @@ def fetch_club_history(team: str, force: bool = False) -> pd.DataFrame:
     """
     cache_path = CLUB_HISTORY_DIR / f"{team.replace(' ', '_')}.parquet"
     if cache_path.exists() and not force:
-        return pd.read_parquet(cache_path)
+        try:
+            return pd.read_parquet(cache_path)
+        except Exception as e:
+            log.warning("Cache read failed for %s (%s), re-fetching from API", team, e)
 
     clubelo_name = CLUBELO_API_NAMES[team]
 
+    # Fetch from API
     try:
         resp = _SESSION.get(f"{CLUBELO_API_BASE}/{clubelo_name}", timeout=60)
         resp.raise_for_status()
-
-        df = pd.read_csv(io.StringIO(resp.text), header=0)
-        # Columns: Rank, Club, Country, Level, Elo, From, To
-
-        df = df.rename(columns={"From": "date_from", "To": "date_to", "Elo": "elo"})
-        df["date_from"] = pd.to_datetime(df["date_from"])
-        df["date_to"] = pd.to_datetime(df["date_to"])
-        df = df[["date_from", "date_to", "elo"]].sort_values("date_from").reset_index(drop=True)
-
-        df.to_parquet(cache_path)
-        log.info("Cached Elo history for %s (%d periods)", team, len(df))
-        return df
-
-    except (requests.RequestException, Exception) as e:
+    except requests.RequestException as e:
         log.warning("Failed to fetch history for %s: %s", team, e)
         if cache_path.exists():
-            return pd.read_parquet(cache_path)
+            try:
+                return pd.read_parquet(cache_path)
+            except Exception:
+                pass
         raise
+
+    # Parse response
+    df = pd.read_csv(io.StringIO(resp.text), header=0)
+    df = df.rename(columns={"From": "date_from", "To": "date_to", "Elo": "elo"})
+    df["date_from"] = pd.to_datetime(df["date_from"])
+    df["date_to"] = pd.to_datetime(df["date_to"])
+    df = df[["date_from", "date_to", "elo"]].sort_values("date_from").reset_index(drop=True)
+
+    # Cache is best-effort
+    try:
+        df.to_parquet(cache_path)
+        log.info("Cached Elo history for %s (%d periods)", team, len(df))
+    except Exception as e:
+        log.warning("Failed to cache history for %s: %s", team, e)
+
+    return df
 
 
 def fetch_all_histories(force: bool = False) -> dict[str, pd.DataFrame]:
