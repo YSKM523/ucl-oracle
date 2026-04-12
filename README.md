@@ -8,57 +8,66 @@ Uses **TSFM + Club Elo + Poisson Scoreline + Monte Carlo** architecture. Compare
 
 Sister projects: [worldcup-oracle](../worldcup-oracle) | [fin-forecast-arena](../fin-forecast-arena)
 
-## Predictions (April 9, 2026 — Pre-QF Second Legs)
+## Predictions (April 12, 2026 — 2 Days Before QF Second Legs)
 
 ### UCL Winner Probabilities
 
 | Rank | Team | AI Win% | Polymarket | Edge | Signal |
 |------|------|---------|------------|------|--------|
-| 1 | **Arsenal** | **50.7%** | 29.5% | **+21.2%** | **STRONG BUY** |
-| 2 | Bayern Munich | 26.8% | 29.5% | -2.7% | — |
-| 3 | PSG | 12.6% | 20.5% | -7.9% | STRONG SELL |
-| 4 | Barcelona | 3.0% | 6.2% | -3.2% | SELL |
-| 5 | Atletico Madrid | 3.0% | 7.6% | -4.7% | SELL |
-| 6 | Liverpool | 1.7% | 1.8% | -0.1% | — |
-| 7 | Real Madrid | 1.6% | 5.0% | -3.4% | SELL |
-| 8 | Sporting CP | 0.5% | 0.7% | -0.2% | — |
+| 1 | **Arsenal** | **55.6%** | 26.5% | **+29.1%** | **STRONG BUY** |
+| 2 | Bayern Munich | 26.0% | 30.5% | -4.5% | SELL |
+| 3 | PSG | 10.3% | 20.5% | -10.2% | **STRONG SELL** |
+| 4 | Barcelona | 2.6% | 7.3% | -4.8% | SELL |
+| 5 | Atletico Madrid | 2.5% | 7.4% | -4.9% | SELL |
+| 6 | Real Madrid | 1.4% | 4.7% | -3.3% | SELL |
+| 7 | Liverpool | 1.3% | 1.8% | -0.6% | — |
+| 8 | Sporting CP | 0.3% | 0.6% | -0.3% | — |
 
 ### QF Advancement Probabilities (Who Reaches Semis?)
 
 | Team | AI Adv% | Polymarket | Edge | Signal |
 |------|---------|------------|------|--------|
-| Arsenal | 97.2% | 93.0% | +4.2% | BUY |
-| **Bayern Munich** | **90.6%** | **83.0%** | **+7.6%** | **STRONG BUY** |
-| PSG | 84.8% | 86.5% | -1.7% | — |
-| **Atletico Madrid** | **81.3%** | **75.5%** | **+5.8%** | **STRONG BUY** |
-| **Barcelona** | **18.7%** | **27.5%** | **-8.8%** | **STRONG SELL** |
-| Liverpool | 15.2% | 14.0% | +1.2% | — |
-| **Real Madrid** | **9.4%** | **16.5%** | **-7.1%** | **STRONG SELL** |
-| Sporting CP | 2.8% | 7.0% | -4.2% | SELL |
+| Arsenal | **97.2%** | 91.5% | **+5.7%** | **STRONG BUY** |
+| **Bayern Munich** | **90.6%** | **83.5%** | **+7.1%** | **STRONG BUY** |
+| PSG | 85.0% | 87.0% | -2.0% | — |
+| **Atletico Madrid** | **82.5%** | **73.5%** | **+9.0%** | **STRONG BUY** |
+| **Barcelona** | **17.5%** | **27.0%** | **-9.5%** | **STRONG SELL** |
+| Liverpool | 15.0% | 13.0% | +2.0% | — |
+| **Real Madrid** | **9.4%** | **17.0%** | **-7.6%** | **STRONG SELL** |
+| Sporting CP | 2.8% | 8.5% | -5.7% | **STRONG SELL** |
 
 ### Per-Model Breakdown (P(Champion))
 
 | Team | Chronos-2 | TimesFM-2.5 | FlowState | Elo Baseline | **Ensemble** |
 |------|-----------|-------------|-----------|-------------|:------------|
-| Arsenal | 50.6% | 50.7% | 51.1% | 50.6% | **50.7%** |
-| Bayern Munich | 27.0% | 27.0% | 26.4% | 27.0% | **26.8%** |
-| PSG | 12.6% | 12.6% | 12.8% | 12.6% | **12.6%** |
-| Atletico Madrid | 3.0% | 3.0% | 2.8% | 3.0% | **3.0%** |
-| Barcelona | 2.9% | 3.0% | 3.0% | 3.0% | **3.0%** |
-| Liverpool | 1.8% | 1.7% | 1.8% | 1.7% | **1.7%** |
-| Real Madrid | 1.6% | 1.6% | 1.7% | 1.6% | **1.6%** |
-| Sporting CP | 0.5% | 0.5% | 0.5% | 0.5% | **0.5%** |
+| Arsenal | 55.6% | 55.7% | 56.2% | 54.9% | **55.6%** |
+| Bayern Munich | 25.9% | 26.0% | 25.2% | 27.0% | **26.0%** |
+| PSG | 10.2% | 10.1% | 10.3% | 10.6% | **10.3%** |
+| Barcelona | 2.8% | 2.8% | 2.9% | 1.7% | **2.6%** |
+| Atletico Madrid | 2.4% | 2.4% | 2.4% | 3.1% | **2.5%** |
+| Real Madrid | 1.4% | 1.4% | 1.4% | 1.3% | **1.4%** |
+| Liverpool | 1.4% | 1.3% | 1.3% | 1.0% | **1.3%** |
+| Sporting CP | 0.3% | 0.4% | 0.4% | 0.3% | **0.3%** |
 
 ## Biggest Edges
 
 | Team | Market | AI | Mkt | Edge | Kelly | Signal |
 |------|--------|-----|------|------|-------|--------|
-| Arsenal | Winner | 50.7% | 29.5% | +21.2% | 15.1% | **STRONG BUY** |
-| PSG | Winner | 12.7% | 20.5% | -7.8% | — | **STRONG SELL** |
-| Barcelona | QF Adv | 18.7% | 27.5% | -8.8% | — | **STRONG SELL** |
-| Bayern Munich | QF Adv | 90.6% | 83.0% | +7.6% | 22.2% | **STRONG BUY** |
-| Real Madrid | QF Adv | 9.4% | 16.5% | -7.1% | — | **STRONG SELL** |
-| Atletico Madrid | QF Adv | 81.3% | 75.5% | +5.8% | 11.8% | **STRONG BUY** |
+| Arsenal | Winner | 55.6% | 26.5% | +29.1% | 19.8% | **STRONG BUY** |
+| PSG | Winner | 10.3% | 20.5% | -10.2% | — | **STRONG SELL** |
+| Barcelona | QF Adv | 17.5% | 27.0% | -9.5% | — | **STRONG SELL** |
+| Atletico Madrid | QF Adv | 82.5% | 73.5% | +9.0% | 17.1% | **STRONG BUY** |
+| Real Madrid | QF Adv | 9.4% | 17.0% | -7.6% | — | **STRONG SELL** |
+| Bayern Munich | QF Adv | 90.6% | 83.5% | +7.1% | 21.5% | **STRONG BUY** |
+| Sporting CP | QF Adv | 2.8% | 8.5% | -5.7% | — | **STRONG SELL** |
+
+### What Changed Since April 9
+
+- **Arsenal winner edge widened** from +21.2% to **+29.1%** — market drifted down (29.5% → 26.5%) while model climbed (50.7% → 55.6%).
+- **PSG flipped from mild to STRONG SELL** on the winner market (-7.9% → -10.2%) as market held 20.5% but model dropped to 10.3%.
+- **Atletico QF edge strengthened** (+5.8% → +9.0%) — model now 82.5% vs market 73.5%.
+- **Sporting CP QF became STRONG SELL** — market at 8.5% vs model 2.8% (7-point overpricing of upset).
+- **Bayern winner signal flipped to SELL** as market now prices them above Arsenal (30.5% > 26.5%).
 
 ## Visualizations
 
@@ -130,12 +139,17 @@ clubelo.com (5yr weekly Elo for 8 teams)
 - **Market odds**: [Polymarket](https://polymarket.com) Gamma API (public, no auth)
 - **Models**: HuggingFace (Chronos-2, TimesFM-2.5, FlowState)
 
-## Current State (April 8-9, 2026)
+## Current State (April 12, 2026 — Pre-Second-Leg)
+
+First legs completed April 8-9. **Second legs are April 14-15, 2026** (2 days away).
 
 ```
 SILVER PATH                              BLUE PATH
-QF1: PSG 2-0 Liverpool                   QF3: Barcelona 0-2 Atletico Madrid
-QF2: Real Madrid 1-2 Bayern Munich       QF4: Sporting CP 0-1 Arsenal
+QF1: PSG 2-0 Liverpool        (1st leg)  QF3: Barcelona 0-2 Atletico Madrid  (1st leg)
+QF2: Real Madrid 1-2 Bayern   (1st leg)  QF4: Sporting CP 0-1 Arsenal        (1st leg)
+
+QF1 2nd leg: Liverpool vs PSG (Apr 15)   QF3 2nd leg: Atletico vs Barça (Apr 14)
+QF2 2nd leg: Bayern vs Real   (Apr 15)   QF4 2nd leg: Arsenal vs Sporting (Apr 14)
 
 SF1: QF1 winner vs QF2 winner            SF2: QF3 winner vs QF4 winner
      (Apr 28-29 / May 5-6)                    (Apr 28-29 / May 5-6)
@@ -143,7 +157,10 @@ SF1: QF1 winner vs QF2 winner            SF2: QF3 winner vs QF4 winner
                     FINAL: SF1 vs SF2 (May 30, Budapest)
 ```
 
-PSG are the defending champions.
+PSG are the defending champions and lead 2-0 heading into the second leg. Three of
+four first-leg losers (Liverpool, Real Madrid, Barcelona, Sporting) face uphill
+aggregate deficits heading into the return legs — which is why the model concentrates
+probability mass on Arsenal, Bayern, PSG, and Atletico.
 
 ## Usage
 
