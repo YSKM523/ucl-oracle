@@ -1,0 +1,388 @@
+{
+  "season": "2021/2022",
+  "ties": [
+    {
+      "stage": "R16",
+      "home_team": "Benfica",
+      "away_team": "Ajax",
+      "agg_home": 3,
+      "agg_away": 2,
+      "winner": "Benfica",
+      "legs": [
+        {
+          "date": "2022-02-23",
+          "home": "Benfica",
+          "away": "Ajax",
+          "home_goals": 2,
+          "away_goals": 2
+        },
+        {
+          "date": "2022-03-15",
+          "home": "Ajax",
+          "away": "Benfica",
+          "home_goals": 0,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2022-02-23",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Inter",
+      "away_team": "Liverpool",
+      "agg_home": 1,
+      "agg_away": 2,
+      "winner": "Liverpool",
+      "legs": [
+        {
+          "date": "2022-02-16",
+          "home": "Inter",
+          "away": "Liverpool",
+          "home_goals": 0,
+          "away_goals": 2
+        },
+        {
+          "date": "2022-03-08",
+          "home": "Liverpool",
+          "away": "Inter",
+          "home_goals": 0,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2022-02-16",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Villarreal",
+      "away_team": "Juventus",
+      "agg_home": 4,
+      "agg_away": 1,
+      "winner": "Villarreal",
+      "legs": [
+        {
+          "date": "2022-02-22",
+          "home": "Villarreal",
+          "away": "Juventus",
+          "home_goals": 1,
+          "away_goals": 1
+        },
+        {
+          "date": "2022-03-16",
+          "home": "Juventus",
+          "away": "Villarreal",
+          "home_goals": 0,
+          "away_goals": 3
+        }
+      ],
+      "first_leg_date": "2022-02-22",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "RB Salzburg",
+      "away_team": "Bayern Munich",
+      "agg_home": 2,
+      "agg_away": 8,
+      "winner": "Bayern Munich",
+      "legs": [
+        {
+          "date": "2022-02-16",
+          "home": "RB Salzburg",
+          "away": "Bayern Munich",
+          "home_goals": 1,
+          "away_goals": 1
+        },
+        {
+          "date": "2022-03-08",
+          "home": "Bayern Munich",
+          "away": "RB Salzburg",
+          "home_goals": 7,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2022-02-16",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Sporting CP",
+      "away_team": "Manchester City",
+      "agg_home": 0,
+      "agg_away": 5,
+      "winner": "Manchester City",
+      "legs": [
+        {
+          "date": "2022-02-15",
+          "home": "Sporting CP",
+          "away": "Manchester City",
+          "home_goals": 0,
+          "away_goals": 5
+        },
+        {
+          "date": "2022-03-09",
+          "home": "Manchester City",
+          "away": "Sporting CP",
+          "home_goals": 0,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2022-02-15",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Atletico Madrid",
+      "away_team": "Manchester United",
+      "agg_home": 2,
+      "agg_away": 1,
+      "winner": "Atletico Madrid",
+      "legs": [
+        {
+          "date": "2022-02-23",
+          "home": "Atletico Madrid",
+          "away": "Man United",
+          "home_goals": 1,
+          "away_goals": 1
+        },
+        {
+          "date": "2022-03-15",
+          "home": "Man United",
+          "away": "Atletico Madrid",
+          "home_goals": 0,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2022-02-23",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Chelsea",
+      "away_team": "Lille",
+      "agg_home": 4,
+      "agg_away": 1,
+      "winner": "Chelsea",
+      "legs": [
+        {
+          "date": "2022-02-22",
+          "home": "Chelsea",
+          "away": "Lille",
+          "home_goals": 2,
+          "away_goals": 0
+        },
+        {
+          "date": "2022-03-16",
+          "home": "Lille",
+          "away": "Chelsea",
+          "home_goals": 1,
+          "away_goals": 2
+        }
+      ],
+      "first_leg_date": "2022-02-22",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "PSG",
+      "away_team": "Real Madrid",
+      "agg_home": 2,
+      "agg_away": 3,
+      "winner": "Real Madrid",
+      "legs": [
+        {
+          "date": "2022-02-15",
+          "home": "PSG",
+          "away": "Real Madrid",
+          "home_goals": 1,
+          "away_goals": 0
+        },
+        {
+          "date": "2022-03-09",
+          "home": "Real Madrid",
+          "away": "PSG",
+          "home_goals": 3,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2022-02-15",
+      "is_single_match": false
+    },
+    {
+      "stage": "QF",
+      "home_team": "Benfica",
+      "away_team": "Liverpool",
+      "agg_home": 4,
+      "agg_away": 6,
+      "winner": "Liverpool",
+      "legs": [
+        {
+          "date": "2022-04-05",
+          "home": "Benfica",
+          "away": "Liverpool",
+          "home_goals": 1,
+          "away_goals": 3
+        },
+        {
+          "date": "2022-04-13",
+          "home": "Liverpool",
+          "away": "Benfica",
+          "home_goals": 3,
+          "away_goals": 3
+        }
+      ],
+      "first_leg_date": "2022-04-05",
+      "is_single_match": false
+    },
+    {
+      "stage": "QF",
+      "home_team": "Villarreal",
+      "away_team": "Bayern Munich",
+      "agg_home": 2,
+      "agg_away": 1,
+      "winner": "Villarreal",
+      "legs": [
+        {
+          "date": "2022-04-06",
+          "home": "Villarreal",
+          "away": "Bayern Munich",
+          "home_goals": 1,
+          "away_goals": 0
+        },
+        {
+          "date": "2022-04-12",
+          "home": "Bayern Munich",
+          "away": "Villarreal",
+          "home_goals": 1,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2022-04-06",
+      "is_single_match": false
+    },
+    {
+      "stage": "QF",
+      "home_team": "Manchester City",
+      "away_team": "Atletico Madrid",
+      "agg_home": 1,
+      "agg_away": 0,
+      "winner": "Manchester City",
+      "legs": [
+        {
+          "date": "2022-04-05",
+          "home": "Manchester City",
+          "away": "Atletico Madrid",
+          "home_goals": 1,
+          "away_goals": 0
+        },
+        {
+          "date": "2022-04-13",
+          "home": "Atletico Madrid",
+          "away": "Manchester City",
+          "home_goals": 0,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2022-04-05",
+      "is_single_match": false
+    },
+    {
+      "stage": "QF",
+      "home_team": "Chelsea",
+      "away_team": "Real Madrid",
+      "agg_home": 4,
+      "agg_away": 5,
+      "winner": "Real Madrid",
+      "legs": [
+        {
+          "date": "2022-04-06",
+          "home": "Chelsea",
+          "away": "Real Madrid",
+          "home_goals": 1,
+          "away_goals": 3
+        },
+        {
+          "date": "2022-04-12",
+          "home": "Real Madrid",
+          "away": "Chelsea",
+          "home_goals": 2,
+          "away_goals": 3
+        }
+      ],
+      "first_leg_date": "2022-04-06",
+      "is_single_match": false
+    },
+    {
+      "stage": "SF",
+      "home_team": "Liverpool",
+      "away_team": "Villarreal",
+      "agg_home": 5,
+      "agg_away": 2,
+      "winner": "Liverpool",
+      "legs": [
+        {
+          "date": "2022-04-27",
+          "home": "Liverpool",
+          "away": "Villarreal",
+          "home_goals": 2,
+          "away_goals": 0
+        },
+        {
+          "date": "2022-05-03",
+          "home": "Villarreal",
+          "away": "Liverpool",
+          "home_goals": 2,
+          "away_goals": 3
+        }
+      ],
+      "first_leg_date": "2022-04-27",
+      "is_single_match": false
+    },
+    {
+      "stage": "SF",
+      "home_team": "Manchester City",
+      "away_team": "Real Madrid",
+      "agg_home": 5,
+      "agg_away": 6,
+      "winner": "Real Madrid",
+      "legs": [
+        {
+          "date": "2022-04-26",
+          "home": "Manchester City",
+          "away": "Real Madrid",
+          "home_goals": 4,
+          "away_goals": 3
+        },
+        {
+          "date": "2022-05-04",
+          "home": "Real Madrid",
+          "away": "Manchester City",
+          "home_goals": 3,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2022-04-26",
+      "is_single_match": false
+    },
+    {
+      "stage": "Final",
+      "home_team": "Liverpool",
+      "away_team": "Real Madrid",
+      "agg_home": 0,
+      "agg_away": 1,
+      "winner": "Real Madrid",
+      "legs": [
+        {
+          "date": "2022-05-28",
+          "home": "Liverpool",
+          "away": "Real Madrid",
+          "home_goals": 0,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2022-05-28",
+      "is_single_match": true
+    }
+  ]
+}

@@ -1,0 +1,388 @@
+{
+  "season": "2023/2024",
+  "ties": [
+    {
+      "stage": "R16",
+      "home_team": "Inter",
+      "away_team": "Atletico Madrid",
+      "agg_home": 2,
+      "agg_away": 2,
+      "winner": "Atletico Madrid",
+      "legs": [
+        {
+          "date": "2024-02-20",
+          "home": "Inter",
+          "away": "Atletico Madrid",
+          "home_goals": 1,
+          "away_goals": 0
+        },
+        {
+          "date": "2024-03-13",
+          "home": "Atletico Madrid",
+          "away": "Inter",
+          "home_goals": 2,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2024-02-20",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "PSV",
+      "away_team": "Borussia Dortmund",
+      "agg_home": 1,
+      "agg_away": 3,
+      "winner": "Borussia Dortmund",
+      "legs": [
+        {
+          "date": "2024-02-20",
+          "home": "PSV",
+          "away": "Dortmund",
+          "home_goals": 1,
+          "away_goals": 1
+        },
+        {
+          "date": "2024-03-13",
+          "home": "Dortmund",
+          "away": "PSV",
+          "home_goals": 2,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2024-02-20",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "PSG",
+      "away_team": "Real Sociedad",
+      "agg_home": 4,
+      "agg_away": 1,
+      "winner": "PSG",
+      "legs": [
+        {
+          "date": "2024-02-14",
+          "home": "PSG",
+          "away": "Real Sociedad",
+          "home_goals": 2,
+          "away_goals": 0
+        },
+        {
+          "date": "2024-03-05",
+          "home": "Real Sociedad",
+          "away": "PSG",
+          "home_goals": 1,
+          "away_goals": 2
+        }
+      ],
+      "first_leg_date": "2024-02-14",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "SSC Napoli",
+      "away_team": "Barcelona",
+      "agg_home": 2,
+      "agg_away": 4,
+      "winner": "Barcelona",
+      "legs": [
+        {
+          "date": "2024-02-21",
+          "home": "SSC Napoli",
+          "away": "Barcelona",
+          "home_goals": 1,
+          "away_goals": 1
+        },
+        {
+          "date": "2024-03-12",
+          "home": "Barcelona",
+          "away": "SSC Napoli",
+          "home_goals": 3,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2024-02-21",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "FC Porto",
+      "away_team": "Arsenal",
+      "agg_home": 1,
+      "agg_away": 1,
+      "winner": "Arsenal",
+      "legs": [
+        {
+          "date": "2024-02-21",
+          "home": "FC Porto",
+          "away": "Arsenal",
+          "home_goals": 1,
+          "away_goals": 0
+        },
+        {
+          "date": "2024-03-12",
+          "home": "Arsenal",
+          "away": "FC Porto",
+          "home_goals": 1,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2024-02-21",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Lazio",
+      "away_team": "Bayern Munich",
+      "agg_home": 1,
+      "agg_away": 3,
+      "winner": "Bayern Munich",
+      "legs": [
+        {
+          "date": "2024-02-14",
+          "home": "Lazio",
+          "away": "Bayern Munich",
+          "home_goals": 1,
+          "away_goals": 0
+        },
+        {
+          "date": "2024-03-05",
+          "home": "Bayern Munich",
+          "away": "Lazio",
+          "home_goals": 3,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2024-02-14",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "RB Leipzig",
+      "away_team": "Real Madrid",
+      "agg_home": 1,
+      "agg_away": 2,
+      "winner": "Real Madrid",
+      "legs": [
+        {
+          "date": "2024-02-13",
+          "home": "RB Leipzig",
+          "away": "Real Madrid",
+          "home_goals": 0,
+          "away_goals": 1
+        },
+        {
+          "date": "2024-03-06",
+          "home": "Real Madrid",
+          "away": "RB Leipzig",
+          "home_goals": 1,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2024-02-13",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "FC K\u00f8benhavn",
+      "away_team": "Manchester City",
+      "agg_home": 2,
+      "agg_away": 6,
+      "winner": "Manchester City",
+      "legs": [
+        {
+          "date": "2024-02-13",
+          "home": "FC K\u00f8benhavn",
+          "away": "Manchester City",
+          "home_goals": 1,
+          "away_goals": 3
+        },
+        {
+          "date": "2024-03-06",
+          "home": "Manchester City",
+          "away": "FC K\u00f8benhavn",
+          "home_goals": 3,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2024-02-13",
+      "is_single_match": false
+    },
+    {
+      "stage": "QF",
+      "home_team": "Atletico Madrid",
+      "away_team": "Borussia Dortmund",
+      "agg_home": 4,
+      "agg_away": 5,
+      "winner": "Borussia Dortmund",
+      "legs": [
+        {
+          "date": "2024-04-10",
+          "home": "Atletico Madrid",
+          "away": "Dortmund",
+          "home_goals": 2,
+          "away_goals": 1
+        },
+        {
+          "date": "2024-04-16",
+          "home": "Dortmund",
+          "away": "Atletico Madrid",
+          "home_goals": 4,
+          "away_goals": 2
+        }
+      ],
+      "first_leg_date": "2024-04-10",
+      "is_single_match": false
+    },
+    {
+      "stage": "QF",
+      "home_team": "PSG",
+      "away_team": "Barcelona",
+      "agg_home": 6,
+      "agg_away": 4,
+      "winner": "PSG",
+      "legs": [
+        {
+          "date": "2024-04-10",
+          "home": "PSG",
+          "away": "Barcelona",
+          "home_goals": 2,
+          "away_goals": 3
+        },
+        {
+          "date": "2024-04-16",
+          "home": "Barcelona",
+          "away": "PSG",
+          "home_goals": 1,
+          "away_goals": 4
+        }
+      ],
+      "first_leg_date": "2024-04-10",
+      "is_single_match": false
+    },
+    {
+      "stage": "QF",
+      "home_team": "Arsenal",
+      "away_team": "Bayern Munich",
+      "agg_home": 2,
+      "agg_away": 3,
+      "winner": "Bayern Munich",
+      "legs": [
+        {
+          "date": "2024-04-09",
+          "home": "Arsenal",
+          "away": "Bayern Munich",
+          "home_goals": 2,
+          "away_goals": 2
+        },
+        {
+          "date": "2024-04-17",
+          "home": "Bayern Munich",
+          "away": "Arsenal",
+          "home_goals": 1,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2024-04-09",
+      "is_single_match": false
+    },
+    {
+      "stage": "QF",
+      "home_team": "Real Madrid",
+      "away_team": "Manchester City",
+      "agg_home": 4,
+      "agg_away": 4,
+      "winner": "Real Madrid",
+      "legs": [
+        {
+          "date": "2024-04-09",
+          "home": "Real Madrid",
+          "away": "Manchester City",
+          "home_goals": 3,
+          "away_goals": 3
+        },
+        {
+          "date": "2024-04-17",
+          "home": "Manchester City",
+          "away": "Real Madrid",
+          "home_goals": 1,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2024-04-09",
+      "is_single_match": false
+    },
+    {
+      "stage": "SF",
+      "home_team": "Borussia Dortmund",
+      "away_team": "PSG",
+      "agg_home": 2,
+      "agg_away": 0,
+      "winner": "Borussia Dortmund",
+      "legs": [
+        {
+          "date": "2024-05-01",
+          "home": "Dortmund",
+          "away": "PSG",
+          "home_goals": 1,
+          "away_goals": 0
+        },
+        {
+          "date": "2024-05-07",
+          "home": "PSG",
+          "away": "Dortmund",
+          "home_goals": 0,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2024-05-01",
+      "is_single_match": false
+    },
+    {
+      "stage": "SF",
+      "home_team": "Bayern Munich",
+      "away_team": "Real Madrid",
+      "agg_home": 3,
+      "agg_away": 4,
+      "winner": "Real Madrid",
+      "legs": [
+        {
+          "date": "2024-04-30",
+          "home": "Bayern Munich",
+          "away": "Real Madrid",
+          "home_goals": 2,
+          "away_goals": 2
+        },
+        {
+          "date": "2024-05-08",
+          "home": "Real Madrid",
+          "away": "Bayern Munich",
+          "home_goals": 2,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2024-04-30",
+      "is_single_match": false
+    },
+    {
+      "stage": "Final",
+      "home_team": "Borussia Dortmund",
+      "away_team": "Real Madrid",
+      "agg_home": 0,
+      "agg_away": 2,
+      "winner": "Real Madrid",
+      "legs": [
+        {
+          "date": "2024-06-01",
+          "home": "Dortmund",
+          "away": "Real Madrid",
+          "home_goals": 0,
+          "away_goals": 2
+        }
+      ],
+      "first_leg_date": "2024-06-01",
+      "is_single_match": true
+    }
+  ]
+}

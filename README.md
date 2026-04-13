@@ -104,6 +104,64 @@ Pulled live from FotMob per-team endpoints. Each injured player contributes
 
 **Why the signal is so lopsided toward Arsenal**: the doubtful list includes Saka, Ødegaard, Timber, Calafiori, and Merino — five of their top six starters. Even conservatively weighting "Doubtful" at 0.5, that's cumulative -46.5 Elo, nearly the per-team cap.
 
+## Backtest Results (5 seasons, 2020-21 → 2024-25)
+
+**Layer 1 baseline: pure Elo at tie date** — no TSFM, no xG, no injuries. Sampled 83 knockout ties from clubelo.com historical API at each tie's first-leg date. See [backtest/results/layer1_elo_baseline.md](backtest/results/layer1_elo_baseline.md) for the full report.
+
+### Headline
+
+| Metric | Model | Coin-flip baseline |
+|--------|-------|--------------------|
+| **Hit rate** | **63.9%** (53/83) | 50.0% |
+| **Brier score** | **0.223** | 0.250 |
+| **Log loss** | **0.629** | 0.693 |
+
+**p-value (hit rate > 50%) = 0.0058** — statistically significant.
+
+### Hit rate by stage
+
+| Stage | n | Hit rate |
+|-------|---|----------|
+| R16 | 48 | **66.7%** |
+| QF | 20 | **70.0%** |
+| SF | 10 | 50.0% |
+| Final | 5 | 40.0% (small sample) |
+
+Signal is strongest early (R16/QF) where Elo gaps are widest. SF/Final pair comparably strong teams, so Elo advantage shrinks.
+
+### Confidence-bucketed hit rate (key finding)
+
+| Confidence | n | Hit rate |
+|------------|---|----------|
+| 50-55% (coin flip) | 10 | 50.0% |
+| 55-65% (mild) | 21 | 66.7% |
+| 65-75% (moderate) | 20 | **35.0% ⚠️** |
+| ≥75% (high) | 32 | **84.4% ✅** |
+
+- **High-confidence picks are very reliable** (84.4%) — when Elo gives a team ≥75% chance, trust it
+- **Moderate picks (65-75%) underperform** — 35% hit rate means the model is **overconfident** in this range, likely because knockout ties have more variance than Poisson-Elo estimates suggest
+
+### Calibration (predicted P vs actual P)
+
+| Predicted bin | n | Mean predicted | Actual rate |
+|---------------|---|----------------|-------------|
+| 0-20% | 23 | 11.6% | 13.0% ✅ |
+| 20-40% | 15 | 32.2% | 46.7% (overestimates underdogs) |
+| 40-60% | 19 | 46.5% | 42.1% ✅ |
+| 60-80% | 19 | 67.2% | **33.3% ⚠️ overconfident** |
+| 80-100% | 7 | 86.9% | 85.7% ✅ |
+
+**Takeaway**: extreme predictions (very high or very low) are well-calibrated; middle-high predictions (60-80%) are significantly overconfident.
+
+### How to run
+
+```bash
+python scripts/fetch_historical_brackets.py   # cache 5 seasons of bracket + results
+python scripts/run_backtest.py                # run model on all ties, write report
+```
+
+Layers 2-3 (TSFM / xG / injuries on top of Elo) not yet backtested — the Layer 1 result establishes the baseline to beat.
+
 ## First-Leg Elo Adjustment (xG-weighted)
 
 The April 12 update applies a performance-based Elo bump after each first leg:

@@ -1,0 +1,596 @@
+{
+  "season": "2024/2025",
+  "ties": [
+    {
+      "stage": "R16",
+      "home_team": "Juventus",
+      "away_team": "PSV",
+      "agg_home": 3,
+      "agg_away": 4,
+      "winner": "PSV",
+      "legs": [
+        {
+          "date": "2025-02-11",
+          "home": "Juventus",
+          "away": "PSV",
+          "home_goals": 2,
+          "away_goals": 1
+        },
+        {
+          "date": "2025-02-19",
+          "home": "PSV",
+          "away": "Juventus",
+          "home_goals": 3,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2025-02-11",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Manchester City",
+      "away_team": "Real Madrid",
+      "agg_home": 3,
+      "agg_away": 6,
+      "winner": "Real Madrid",
+      "legs": [
+        {
+          "date": "2025-02-11",
+          "home": "Manchester City",
+          "away": "Real Madrid",
+          "home_goals": 2,
+          "away_goals": 3
+        },
+        {
+          "date": "2025-02-19",
+          "home": "Real Madrid",
+          "away": "Manchester City",
+          "home_goals": 3,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2025-02-11",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Brest",
+      "away_team": "PSG",
+      "agg_home": 0,
+      "agg_away": 10,
+      "winner": "PSG",
+      "legs": [
+        {
+          "date": "2025-02-11",
+          "home": "Brest",
+          "away": "PSG",
+          "home_goals": 0,
+          "away_goals": 3
+        },
+        {
+          "date": "2025-02-19",
+          "home": "PSG",
+          "away": "Brest",
+          "home_goals": 7,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2025-02-11",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Club Brugge",
+      "away_team": "Atalanta",
+      "agg_home": 5,
+      "agg_away": 2,
+      "winner": "Club Brugge",
+      "legs": [
+        {
+          "date": "2025-02-12",
+          "home": "Club Brugge",
+          "away": "Atalanta",
+          "home_goals": 2,
+          "away_goals": 1
+        },
+        {
+          "date": "2025-02-18",
+          "home": "Atalanta",
+          "away": "Club Brugge",
+          "home_goals": 1,
+          "away_goals": 3
+        }
+      ],
+      "first_leg_date": "2025-02-12",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Monaco",
+      "away_team": "Benfica",
+      "agg_home": 3,
+      "agg_away": 4,
+      "winner": "Benfica",
+      "legs": [
+        {
+          "date": "2025-02-12",
+          "home": "Monaco",
+          "away": "Benfica",
+          "home_goals": 0,
+          "away_goals": 1
+        },
+        {
+          "date": "2025-02-18",
+          "home": "Benfica",
+          "away": "Monaco",
+          "home_goals": 3,
+          "away_goals": 3
+        }
+      ],
+      "first_leg_date": "2025-02-12",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Sporting CP",
+      "away_team": "Borussia Dortmund",
+      "agg_home": 0,
+      "agg_away": 3,
+      "winner": "Borussia Dortmund",
+      "legs": [
+        {
+          "date": "2025-02-11",
+          "home": "Sporting CP",
+          "away": "Dortmund",
+          "home_goals": 0,
+          "away_goals": 3
+        },
+        {
+          "date": "2025-02-19",
+          "home": "Dortmund",
+          "away": "Sporting CP",
+          "home_goals": 0,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2025-02-11",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Celtic",
+      "away_team": "Bayern Munich",
+      "agg_home": 2,
+      "agg_away": 3,
+      "winner": "Bayern Munich",
+      "legs": [
+        {
+          "date": "2025-02-12",
+          "home": "Celtic",
+          "away": "Bayern Munich",
+          "home_goals": 1,
+          "away_goals": 2
+        },
+        {
+          "date": "2025-02-18",
+          "home": "Bayern Munich",
+          "away": "Celtic",
+          "home_goals": 1,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2025-02-12",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Feyenoord",
+      "away_team": "Milan",
+      "agg_home": 2,
+      "agg_away": 1,
+      "winner": "Feyenoord",
+      "legs": [
+        {
+          "date": "2025-02-12",
+          "home": "Feyenoord",
+          "away": "Milan",
+          "home_goals": 1,
+          "away_goals": 0
+        },
+        {
+          "date": "2025-02-18",
+          "home": "Milan",
+          "away": "Feyenoord",
+          "home_goals": 1,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2025-02-12",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "PSV",
+      "away_team": "Arsenal",
+      "agg_home": 3,
+      "agg_away": 9,
+      "winner": "Arsenal",
+      "legs": [
+        {
+          "date": "2025-03-04",
+          "home": "PSV",
+          "away": "Arsenal",
+          "home_goals": 1,
+          "away_goals": 7
+        },
+        {
+          "date": "2025-03-12",
+          "home": "Arsenal",
+          "away": "PSV",
+          "home_goals": 2,
+          "away_goals": 2
+        }
+      ],
+      "first_leg_date": "2025-03-04",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Real Madrid",
+      "away_team": "Atletico Madrid",
+      "agg_home": 2,
+      "agg_away": 2,
+      "winner": "Real Madrid",
+      "legs": [
+        {
+          "date": "2025-03-04",
+          "home": "Real Madrid",
+          "away": "Atletico Madrid",
+          "home_goals": 2,
+          "away_goals": 1
+        },
+        {
+          "date": "2025-03-12",
+          "home": "Atletico Madrid",
+          "away": "Real Madrid",
+          "home_goals": 1,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2025-03-04",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "PSG",
+      "away_team": "Liverpool",
+      "agg_home": 1,
+      "agg_away": 1,
+      "winner": "PSG",
+      "legs": [
+        {
+          "date": "2025-03-05",
+          "home": "PSG",
+          "away": "Liverpool",
+          "home_goals": 0,
+          "away_goals": 1
+        },
+        {
+          "date": "2025-03-11",
+          "home": "Liverpool",
+          "away": "PSG",
+          "home_goals": 0,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2025-03-05",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Club Brugge",
+      "away_team": "Aston Villa",
+      "agg_home": 1,
+      "agg_away": 6,
+      "winner": "Aston Villa",
+      "legs": [
+        {
+          "date": "2025-03-04",
+          "home": "Club Brugge",
+          "away": "Aston Villa",
+          "home_goals": 1,
+          "away_goals": 3
+        },
+        {
+          "date": "2025-03-12",
+          "home": "Aston Villa",
+          "away": "Club Brugge",
+          "home_goals": 3,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2025-03-04",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Benfica",
+      "away_team": "Barcelona",
+      "agg_home": 1,
+      "agg_away": 4,
+      "winner": "Barcelona",
+      "legs": [
+        {
+          "date": "2025-03-05",
+          "home": "Benfica",
+          "away": "Barcelona",
+          "home_goals": 0,
+          "away_goals": 1
+        },
+        {
+          "date": "2025-03-11",
+          "home": "Barcelona",
+          "away": "Benfica",
+          "home_goals": 3,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2025-03-05",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Borussia Dortmund",
+      "away_team": "Lille",
+      "agg_home": 3,
+      "agg_away": 2,
+      "winner": "Borussia Dortmund",
+      "legs": [
+        {
+          "date": "2025-03-04",
+          "home": "Dortmund",
+          "away": "Lille",
+          "home_goals": 1,
+          "away_goals": 1
+        },
+        {
+          "date": "2025-03-12",
+          "home": "Lille",
+          "away": "Dortmund",
+          "home_goals": 1,
+          "away_goals": 2
+        }
+      ],
+      "first_leg_date": "2025-03-04",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Bayern Munich",
+      "away_team": "Bayer Leverkusen",
+      "agg_home": 5,
+      "agg_away": 0,
+      "winner": "Bayern Munich",
+      "legs": [
+        {
+          "date": "2025-03-05",
+          "home": "Bayern Munich",
+          "away": "Leverkusen",
+          "home_goals": 3,
+          "away_goals": 0
+        },
+        {
+          "date": "2025-03-11",
+          "home": "Leverkusen",
+          "away": "Bayern Munich",
+          "home_goals": 0,
+          "away_goals": 2
+        }
+      ],
+      "first_leg_date": "2025-03-05",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Feyenoord",
+      "away_team": "Inter",
+      "agg_home": 1,
+      "agg_away": 4,
+      "winner": "Inter",
+      "legs": [
+        {
+          "date": "2025-03-05",
+          "home": "Feyenoord",
+          "away": "Inter",
+          "home_goals": 0,
+          "away_goals": 2
+        },
+        {
+          "date": "2025-03-11",
+          "home": "Inter",
+          "away": "Feyenoord",
+          "home_goals": 2,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2025-03-05",
+      "is_single_match": false
+    },
+    {
+      "stage": "QF",
+      "home_team": "Arsenal",
+      "away_team": "Real Madrid",
+      "agg_home": 5,
+      "agg_away": 1,
+      "winner": "Arsenal",
+      "legs": [
+        {
+          "date": "2025-04-08",
+          "home": "Arsenal",
+          "away": "Real Madrid",
+          "home_goals": 3,
+          "away_goals": 0
+        },
+        {
+          "date": "2025-04-16",
+          "home": "Real Madrid",
+          "away": "Arsenal",
+          "home_goals": 1,
+          "away_goals": 2
+        }
+      ],
+      "first_leg_date": "2025-04-08",
+      "is_single_match": false
+    },
+    {
+      "stage": "QF",
+      "home_team": "PSG",
+      "away_team": "Aston Villa",
+      "agg_home": 5,
+      "agg_away": 4,
+      "winner": "PSG",
+      "legs": [
+        {
+          "date": "2025-04-09",
+          "home": "PSG",
+          "away": "Aston Villa",
+          "home_goals": 3,
+          "away_goals": 1
+        },
+        {
+          "date": "2025-04-15",
+          "home": "Aston Villa",
+          "away": "PSG",
+          "home_goals": 3,
+          "away_goals": 2
+        }
+      ],
+      "first_leg_date": "2025-04-09",
+      "is_single_match": false
+    },
+    {
+      "stage": "QF",
+      "home_team": "Barcelona",
+      "away_team": "Borussia Dortmund",
+      "agg_home": 5,
+      "agg_away": 3,
+      "winner": "Barcelona",
+      "legs": [
+        {
+          "date": "2025-04-09",
+          "home": "Barcelona",
+          "away": "Dortmund",
+          "home_goals": 4,
+          "away_goals": 0
+        },
+        {
+          "date": "2025-04-15",
+          "home": "Dortmund",
+          "away": "Barcelona",
+          "home_goals": 3,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2025-04-09",
+      "is_single_match": false
+    },
+    {
+      "stage": "QF",
+      "home_team": "Bayern Munich",
+      "away_team": "Inter",
+      "agg_home": 3,
+      "agg_away": 4,
+      "winner": "Inter",
+      "legs": [
+        {
+          "date": "2025-04-08",
+          "home": "Bayern Munich",
+          "away": "Inter",
+          "home_goals": 1,
+          "away_goals": 2
+        },
+        {
+          "date": "2025-04-16",
+          "home": "Inter",
+          "away": "Bayern Munich",
+          "home_goals": 2,
+          "away_goals": 2
+        }
+      ],
+      "first_leg_date": "2025-04-08",
+      "is_single_match": false
+    },
+    {
+      "stage": "SF",
+      "home_team": "Arsenal",
+      "away_team": "PSG",
+      "agg_home": 1,
+      "agg_away": 3,
+      "winner": "PSG",
+      "legs": [
+        {
+          "date": "2025-04-29",
+          "home": "Arsenal",
+          "away": "PSG",
+          "home_goals": 0,
+          "away_goals": 1
+        },
+        {
+          "date": "2025-05-07",
+          "home": "PSG",
+          "away": "Arsenal",
+          "home_goals": 2,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2025-04-29",
+      "is_single_match": false
+    },
+    {
+      "stage": "SF",
+      "home_team": "Barcelona",
+      "away_team": "Inter",
+      "agg_home": 6,
+      "agg_away": 7,
+      "winner": "Inter",
+      "legs": [
+        {
+          "date": "2025-04-30",
+          "home": "Barcelona",
+          "away": "Inter",
+          "home_goals": 3,
+          "away_goals": 3
+        },
+        {
+          "date": "2025-05-06",
+          "home": "Inter",
+          "away": "Barcelona",
+          "home_goals": 4,
+          "away_goals": 3
+        }
+      ],
+      "first_leg_date": "2025-04-30",
+      "is_single_match": false
+    },
+    {
+      "stage": "Final",
+      "home_team": "PSG",
+      "away_team": "Inter",
+      "agg_home": 5,
+      "agg_away": 0,
+      "winner": "PSG",
+      "legs": [
+        {
+          "date": "2025-05-31",
+          "home": "PSG",
+          "away": "Inter",
+          "home_goals": 5,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2025-05-31",
+      "is_single_match": true
+    }
+  ]
+}

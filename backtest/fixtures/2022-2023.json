@@ -1,0 +1,388 @@
+{
+  "season": "2022/2023",
+  "ties": [
+    {
+      "stage": "R16",
+      "home_team": "Liverpool",
+      "away_team": "Real Madrid",
+      "agg_home": 2,
+      "agg_away": 6,
+      "winner": "Real Madrid",
+      "legs": [
+        {
+          "date": "2023-02-21",
+          "home": "Liverpool",
+          "away": "Real Madrid",
+          "home_goals": 2,
+          "away_goals": 5
+        },
+        {
+          "date": "2023-03-15",
+          "home": "Real Madrid",
+          "away": "Liverpool",
+          "home_goals": 1,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2023-02-21",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Borussia Dortmund",
+      "away_team": "Chelsea",
+      "agg_home": 1,
+      "agg_away": 2,
+      "winner": "Chelsea",
+      "legs": [
+        {
+          "date": "2023-02-15",
+          "home": "Dortmund",
+          "away": "Chelsea",
+          "home_goals": 1,
+          "away_goals": 0
+        },
+        {
+          "date": "2023-03-07",
+          "home": "Chelsea",
+          "away": "Dortmund",
+          "home_goals": 2,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2023-02-15",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "RB Leipzig",
+      "away_team": "Manchester City",
+      "agg_home": 1,
+      "agg_away": 8,
+      "winner": "Manchester City",
+      "legs": [
+        {
+          "date": "2023-02-22",
+          "home": "RB Leipzig",
+          "away": "Manchester City",
+          "home_goals": 1,
+          "away_goals": 1
+        },
+        {
+          "date": "2023-03-14",
+          "home": "Manchester City",
+          "away": "RB Leipzig",
+          "home_goals": 7,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2023-02-22",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "PSG",
+      "away_team": "Bayern Munich",
+      "agg_home": 0,
+      "agg_away": 3,
+      "winner": "Bayern Munich",
+      "legs": [
+        {
+          "date": "2023-02-14",
+          "home": "PSG",
+          "away": "Bayern Munich",
+          "home_goals": 0,
+          "away_goals": 1
+        },
+        {
+          "date": "2023-03-08",
+          "home": "Bayern Munich",
+          "away": "PSG",
+          "home_goals": 2,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2023-02-14",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Milan",
+      "away_team": "Tottenham",
+      "agg_home": 1,
+      "agg_away": 0,
+      "winner": "Milan",
+      "legs": [
+        {
+          "date": "2023-02-14",
+          "home": "Milan",
+          "away": "Tottenham",
+          "home_goals": 1,
+          "away_goals": 0
+        },
+        {
+          "date": "2023-03-08",
+          "home": "Tottenham",
+          "away": "Milan",
+          "home_goals": 0,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2023-02-14",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Eintracht Frankfurt",
+      "away_team": "Napoli",
+      "agg_home": 0,
+      "agg_away": 5,
+      "winner": "Napoli",
+      "legs": [
+        {
+          "date": "2023-02-21",
+          "home": "Frankfurt",
+          "away": "Napoli",
+          "home_goals": 0,
+          "away_goals": 2
+        },
+        {
+          "date": "2023-03-15",
+          "home": "Napoli",
+          "away": "Frankfurt",
+          "home_goals": 3,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2023-02-21",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Club Brugge",
+      "away_team": "Benfica",
+      "agg_home": 1,
+      "agg_away": 7,
+      "winner": "Benfica",
+      "legs": [
+        {
+          "date": "2023-02-15",
+          "home": "Club Brugge",
+          "away": "Benfica",
+          "home_goals": 0,
+          "away_goals": 2
+        },
+        {
+          "date": "2023-03-07",
+          "home": "Benfica",
+          "away": "Club Brugge",
+          "home_goals": 5,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2023-02-15",
+      "is_single_match": false
+    },
+    {
+      "stage": "R16",
+      "home_team": "Inter",
+      "away_team": "FC Porto",
+      "agg_home": 1,
+      "agg_away": 0,
+      "winner": "Inter",
+      "legs": [
+        {
+          "date": "2023-02-22",
+          "home": "Inter",
+          "away": "FC Porto",
+          "home_goals": 1,
+          "away_goals": 0
+        },
+        {
+          "date": "2023-03-14",
+          "home": "FC Porto",
+          "away": "Inter",
+          "home_goals": 0,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2023-02-22",
+      "is_single_match": false
+    },
+    {
+      "stage": "QF",
+      "home_team": "Real Madrid",
+      "away_team": "Chelsea",
+      "agg_home": 4,
+      "agg_away": 0,
+      "winner": "Real Madrid",
+      "legs": [
+        {
+          "date": "2023-04-12",
+          "home": "Real Madrid",
+          "away": "Chelsea",
+          "home_goals": 2,
+          "away_goals": 0
+        },
+        {
+          "date": "2023-04-18",
+          "home": "Chelsea",
+          "away": "Real Madrid",
+          "home_goals": 0,
+          "away_goals": 2
+        }
+      ],
+      "first_leg_date": "2023-04-12",
+      "is_single_match": false
+    },
+    {
+      "stage": "QF",
+      "home_team": "Manchester City",
+      "away_team": "Bayern Munich",
+      "agg_home": 4,
+      "agg_away": 1,
+      "winner": "Manchester City",
+      "legs": [
+        {
+          "date": "2023-04-11",
+          "home": "Manchester City",
+          "away": "Bayern Munich",
+          "home_goals": 3,
+          "away_goals": 0
+        },
+        {
+          "date": "2023-04-19",
+          "home": "Bayern Munich",
+          "away": "Manchester City",
+          "home_goals": 1,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2023-04-11",
+      "is_single_match": false
+    },
+    {
+      "stage": "QF",
+      "home_team": "Milan",
+      "away_team": "Napoli",
+      "agg_home": 2,
+      "agg_away": 1,
+      "winner": "Milan",
+      "legs": [
+        {
+          "date": "2023-04-12",
+          "home": "Milan",
+          "away": "Napoli",
+          "home_goals": 1,
+          "away_goals": 0
+        },
+        {
+          "date": "2023-04-18",
+          "home": "Napoli",
+          "away": "Milan",
+          "home_goals": 1,
+          "away_goals": 1
+        }
+      ],
+      "first_leg_date": "2023-04-12",
+      "is_single_match": false
+    },
+    {
+      "stage": "QF",
+      "home_team": "Benfica",
+      "away_team": "Inter",
+      "agg_home": 3,
+      "agg_away": 5,
+      "winner": "Inter",
+      "legs": [
+        {
+          "date": "2023-04-11",
+          "home": "Benfica",
+          "away": "Inter",
+          "home_goals": 0,
+          "away_goals": 2
+        },
+        {
+          "date": "2023-04-19",
+          "home": "Inter",
+          "away": "Benfica",
+          "home_goals": 3,
+          "away_goals": 3
+        }
+      ],
+      "first_leg_date": "2023-04-11",
+      "is_single_match": false
+    },
+    {
+      "stage": "SF",
+      "home_team": "Real Madrid",
+      "away_team": "Manchester City",
+      "agg_home": 1,
+      "agg_away": 5,
+      "winner": "Manchester City",
+      "legs": [
+        {
+          "date": "2023-05-09",
+          "home": "Real Madrid",
+          "away": "Manchester City",
+          "home_goals": 1,
+          "away_goals": 1
+        },
+        {
+          "date": "2023-05-17",
+          "home": "Manchester City",
+          "away": "Real Madrid",
+          "home_goals": 4,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2023-05-09",
+      "is_single_match": false
+    },
+    {
+      "stage": "SF",
+      "home_team": "Milan",
+      "away_team": "Inter",
+      "agg_home": 0,
+      "agg_away": 3,
+      "winner": "Inter",
+      "legs": [
+        {
+          "date": "2023-05-10",
+          "home": "Milan",
+          "away": "Inter",
+          "home_goals": 0,
+          "away_goals": 2
+        },
+        {
+          "date": "2023-05-16",
+          "home": "Inter",
+          "away": "Milan",
+          "home_goals": 1,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2023-05-10",
+      "is_single_match": false
+    },
+    {
+      "stage": "Final",
+      "home_team": "Manchester City",
+      "away_team": "Inter",
+      "agg_home": 1,
+      "agg_away": 0,
+      "winner": "Manchester City",
+      "legs": [
+        {
+          "date": "2023-06-10",
+          "home": "Manchester City",
+          "away": "Inter",
+          "home_goals": 1,
+          "away_goals": 0
+        }
+      ],
+      "first_leg_date": "2023-06-10",
+      "is_single_match": true
+    }
+  ]
+}
