@@ -8,5 +8,6 @@ backtest/cache_histories/
 
 # Proxy credentials
 proxies.txt
+proxies_alive.txt
 secrets/
 .env

@@ -180,7 +180,25 @@ Same 83 ties, but each team's Elo is replaced with the ensemble forecast from 3 
 
 **Implication for live predictions**: keep the TSFM ensemble in `run_predictions.py` for uncertainty quantification (quantile ranges are still useful for sizing Kelly bets) but don't expect point-prediction improvements over the Elo baseline.
 
-Layer 3 (add xG + injuries) not yet backtested — the first-leg xG signal by construction only applies to 2nd legs onward, so it can only affect ~7 of 83 ties (the QFs where we have both legs). Injuries can't be reliably reconstructed from FotMob historical data. Both signals are **current-round-only** enhancements.
+### Layer 3 backtest: xG-adjusted second-leg prediction
+
+**Status: blocked on historical xG data source** (code is in place and ready — see `backtest/runner_layer3.py`, `scripts/run_backtest_layer3.py`, `tests/test_layer3_runner.py`).
+
+Layer 3 re-frames the task to match the live pipeline: for each 2-legged tie, at 2nd-leg date with first-leg score and xG known, predict who advances. That isolates the incremental value of the xG signal (L3b) over a "first-leg score only" baseline (L3a).
+
+**Why no historical xG**: three sources blocked:
+
+| Source | Blocker |
+|--------|---------|
+| FotMob HTML (`/matches/{slug}/{code}#{matchId}`) | URL **aggregates to latest match** when teams have played again; old matchIds redirect. Requested 3497088 (2021) → served 4384190 (2024 rematch). No per-match historical access. |
+| FotMob `/api/data/matchDetails?matchId=X` | Turnstile-gated; even with residential proxy + Playwright, returns `{"error":"TURNSTILE_REQUIRED"}` |
+| FBref match pages | Cloudflare JS challenge; Playwright + stealth + residential proxy still held on "Just a moment…" after 30s |
+
+**What works for the live pipeline**: `scripts/refresh_xg.py` intercepts the matchDetails response **while the current round's match page is still being served** (before FotMob aggregates it). That's how the April 13 run captured real xG for the 2025-26 QF first legs.
+
+**To backtest Layer 3 in the future**: fill `backtest/fixtures/historical_xg.json` manually (format: `{season: {tie_key: {home_xg, away_xg}}}`) from any source — Opta reports, published research, paid API — then run `python scripts/run_backtest_layer3.py`. The runner is ready.
+
+**Injury layer also not backtested**: FotMob's `/teams` endpoint returns *current* injury list only, no historical snapshots. Historical injury data would need a separate source (Transfermarkt has partial archive but requires scraping).
 
 ## First-Leg Elo Adjustment (xG-weighted)
 

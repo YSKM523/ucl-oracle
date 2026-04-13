@@ -133,9 +133,20 @@ def extract_ties(data: dict) -> list[dict]:
                 status = m.get("status", {})
                 if not status.get("finished"):
                     continue
+                # Page URL looks like "/matches/real-madrid-vs-bayern-munchen/2tes97#5161876"
+                page_url = m.get("pageUrl", "")
+                slug = code = None
+                if "/matches/" in page_url:
+                    parts = page_url.split("/matches/")[-1].split("#")[0]
+                    bits = parts.split("/")
+                    if len(bits) >= 2:
+                        slug, code = bits[0], bits[1]
                 legs.append(
                     {
                         "date": status.get("utcTime", "")[:10],
+                        "match_id": m.get("matchId"),
+                        "slug": slug,
+                        "page_code": code,
                         "home": canonical_name(m["home"]["name"]),
                         "away": canonical_name(m["away"]["name"]),
                         "home_goals": m["home"].get("score"),
