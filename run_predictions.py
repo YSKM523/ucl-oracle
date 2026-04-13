@@ -11,9 +11,21 @@ import pandas as pd
 # Ensure project root is on path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from config import FIRST_LEG_RESULTS, MONTE_CARLO_SIMULATIONS, RESULTS_DIR, UCL_TEAMS
+from config import (
+    FIRST_LEG_ADJUSTMENT_ENABLED,
+    FIRST_LEG_RESULTS,
+    FIRST_LEG_XG,
+    MONTE_CARLO_SIMULATIONS,
+    RESULTS_DIR,
+    UCL_TEAMS,
+)
 from data.fetcher_clubelo import fetch_current_elos
+from data.fetcher_xg import fetch_first_leg_xg
 from markets.edge_detector import detect_edges, format_edge_report, kelly_fraction
+from prediction.elo_adjuster import (
+    adjust_elos_for_first_legs,
+    format_adjustments_report,
+)
 from prediction.knockout_simulator import run_monte_carlo
 
 log = logging.getLogger(__name__)
@@ -35,10 +47,22 @@ def run_elo_baseline() -> tuple[pd.DataFrame, dict[str, float]]:
 
     # Show first-leg context
     print("\n[2/3] QF First-Leg Results (already played):")
+    xg_data = fetch_first_leg_xg() if FIRST_LEG_ADJUSTMENT_ENABLED else {}
     for qf_id, fl in FIRST_LEG_RESULTS.items():
         h, a = fl["home"], fl["away"]
         hg, ag = fl["home_goals"], fl["away_goals"]
-        print(f"  {qf_id}: {h} {hg}-{ag} {a}")
+        xg = xg_data.get(qf_id)
+        xg_str = (
+            f"  (xG: {xg['home_xg']:.2f}-{xg['away_xg']:.2f})" if xg else ""
+        )
+        print(f"  {qf_id}: {h} {hg}-{ag} {a}{xg_str}")
+
+    # First-leg Elo adjustment (feeds SF/Final sims; QF aggregates still use goals)
+    if FIRST_LEG_ADJUSTMENT_ENABLED:
+        print("\n  Applying first-leg Elo adjustments (xG-weighted performance residual):")
+        before = dict(elos)
+        elos, adjustments = adjust_elos_for_first_legs(elos, xg_data=xg_data)
+        print(format_adjustments_report(adjustments, before, elos))
 
     # Monte Carlo
     print(f"\n[3/3] Running {MONTE_CARLO_SIMULATIONS:,} Monte Carlo simulations …")
@@ -175,6 +199,14 @@ def run_tsfm_predictions() -> tuple[pd.DataFrame, dict[str, float]]:
     # Also include Elo baseline as a "model"
     current_elos = fetch_current_elos()
     model_elos["Elo-Baseline"] = current_elos
+
+    # Apply first-leg Elo adjustment to every model's Elo dict
+    if FIRST_LEG_ADJUSTMENT_ENABLED:
+        xg_data = fetch_first_leg_xg()
+        print("\n  Applying first-leg Elo adjustments to each model:")
+        for mn, elos_m in list(model_elos.items()):
+            adjusted, _ = adjust_elos_for_first_legs(elos_m, xg_data=xg_data)
+            model_elos[mn] = adjusted
 
     # Run Monte Carlo for each model
     print("\n[3/4] Running Monte Carlo per model …")
