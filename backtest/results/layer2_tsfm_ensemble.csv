@@ -1,0 +1,84 @@
+season,stage,home_team,away_team,actual_winner,p_home_advances,home_elo,away_elo,model_pick,correct,brier,log_loss,prediction_date
+2020/2021,R16,Lazio,Bayern Munich,Bayern Munich,0.0494,1770.6,2040.2,Bayern Munich,True,0.0024,0.0507,2021-02-23
+2020/2021,R16,Barcelona,PSG,PSG,0.6662,1931.2,1867.1,Barcelona,False,0.4438,1.0972,2021-02-16
+2020/2021,R16,Borussia M'Gladbach,Manchester City,Manchester City,0.0724,1789.7,2025.8,Manchester City,True,0.0052,0.0752,2021-02-24
+2020/2021,R16,Sevilla,Borussia Dortmund,Borussia Dortmund,0.6204,1863.6,1817.8,Sevilla,False,0.3849,0.9686,2021-02-17
+2020/2021,R16,Atalanta,Real Madrid,Real Madrid,0.3018,1830.8,1902.8,Real Madrid,True,0.0911,0.3592,2021-02-24
+2020/2021,R16,RB Leipzig,Liverpool,Liverpool,0.3598,1878.0,1925.3,Liverpool,True,0.1295,0.446,2021-02-16
+2020/2021,R16,FC Porto,Juventus,FC Porto,0.295,1792.7,1868.1,Juventus,False,0.497,1.2208,2021-02-17
+2020/2021,R16,Atletico Madrid,Chelsea,Chelsea,0.6524,1921.3,1865.5,Atletico Madrid,False,0.4256,1.0567,2021-02-23
+2020/2021,QF,Bayern Munich,PSG,PSG,0.8434,2028.9,1872.2,Bayern Munich,False,0.7113,1.8541,2021-04-07
+2020/2021,QF,Manchester City,Borussia Dortmund,Manchester City,0.9126,2026.4,1814.6,Manchester City,True,0.0076,0.0915,2021-04-06
+2020/2021,QF,Real Madrid,Liverpool,Real Madrid,0.5394,1926.2,1908.9,Real Madrid,True,0.2122,0.6173,2021-04-06
+2020/2021,QF,FC Porto,Chelsea,Chelsea,0.3234,1803.8,1871.7,Chelsea,True,0.1046,0.3907,2021-04-07
+2020/2021,SF,PSG,Manchester City,Manchester City,0.155,1884.8,2027.3,Manchester City,True,0.024,0.1684,2021-04-28
+2020/2021,SF,Real Madrid,Chelsea,Chelsea,0.6508,1942.6,1885.0,Real Madrid,False,0.4235,1.0521,2021-04-27
+2020/2021,Final,Manchester City,Chelsea,Chelsea,0.726,2025.8,1910.7,Manchester City,False,0.5271,1.2946,2021-05-29
+2021/2022,R16,Benfica,Ajax,Benfica,0.1384,1746.6,1905.8,Ajax,False,0.7424,1.9776,2022-02-23
+2021/2022,R16,Inter,Liverpool,Liverpool,0.1998,1882.4,2004.2,Liverpool,True,0.0399,0.2229,2022-02-16
+2021/2022,R16,Villarreal,Juventus,Villarreal,0.4366,1809.9,1826.3,Juventus,False,0.3174,0.8287,2022-02-22
+2021/2022,R16,RB Salzburg,Bayern Munich,Bayern Munich,0.0648,1773.4,2018.1,Bayern Munich,True,0.0042,0.067,2022-02-16
+2021/2022,R16,Sporting CP,Manchester City,Manchester City,0.054,1758.4,2022.6,Manchester City,True,0.0029,0.0555,2022-02-15
+2021/2022,R16,Atletico Madrid,Manchester United,Atletico Madrid,0.3624,1835.0,1883.7,Manchester United,False,0.4065,1.015,2022-02-23
+2021/2022,R16,Chelsea,Lille,Chelsea,0.8862,1934.8,1743.1,Chelsea,True,0.013,0.1208,2022-02-22
+2021/2022,R16,PSG,Real Madrid,Real Madrid,0.4228,1919.6,1939.9,Real Madrid,True,0.1788,0.5496,2022-02-15
+2021/2022,QF,Benfica,Liverpool,Liverpool,0.0468,1764.5,2035.6,Liverpool,True,0.0022,0.0479,2022-04-05
+2021/2022,QF,Villarreal,Bayern Munich,Villarreal,0.1186,1814.5,1993.5,Bayern Munich,False,0.7769,2.132,2022-04-06
+2021/2022,QF,Manchester City,Atletico Madrid,Manchester City,0.8352,2025.2,1877.5,Manchester City,True,0.0272,0.1801,2022-04-05
+2021/2022,QF,Chelsea,Real Madrid,Real Madrid,0.4446,1934.4,1948.3,Real Madrid,True,0.1977,0.5881,2022-04-06
+2021/2022,SF,Liverpool,Villarreal,Liverpool,0.915,2054.1,1839.0,Liverpool,True,0.0072,0.0888,2022-04-27
+2021/2022,SF,Manchester City,Real Madrid,Real Madrid,0.677,2039.6,1969.4,Manchester City,False,0.4583,1.1301,2022-04-26
+2021/2022,Final,Liverpool,Real Madrid,Real Madrid,0.6444,2046.6,1976.2,Liverpool,False,0.4153,1.0339,2022-05-28
+2022/2023,R16,Liverpool,Real Madrid,Real Madrid,0.49,1937.7,1937.2,Real Madrid,True,0.2401,0.6733,2023-02-21
+2022/2023,R16,Borussia Dortmund,Chelsea,Chelsea,0.4208,1837.6,1862.9,Chelsea,True,0.1771,0.5461,2023-02-15
+2022/2023,R16,RB Leipzig,Manchester City,Manchester City,0.1314,1850.9,2017.2,Manchester City,True,0.0173,0.1409,2023-02-22
+2022/2023,R16,PSG,Bayern Munich,Bayern Munich,0.19,1876.9,2001.6,Bayern Munich,True,0.0361,0.2107,2023-02-14
+2022/2023,R16,Milan,Tottenham,Milan,0.2648,1785.1,1869.8,Tottenham,False,0.5405,1.3288,2023-02-14
+2022/2023,R16,Eintracht Frankfurt,Napoli,Napoli,0.1678,1784.5,1922.4,Napoli,True,0.0282,0.1837,2023-02-21
+2022/2023,R16,Club Brugge,Benfica,Benfica,0.096,1636.9,1841.0,Benfica,True,0.0092,0.1009,2023-02-15
+2022/2023,R16,Inter,FC Porto,Inter,0.4924,1841.5,1840.8,FC Porto,False,0.2577,0.7085,2023-02-22
+2022/2023,QF,Real Madrid,Chelsea,Real Madrid,0.7304,1926.2,1833.6,Real Madrid,True,0.0727,0.3142,2023-04-12
+2022/2023,QF,Manchester City,Bayern Munich,Manchester City,0.6624,2047.1,1982.4,Manchester City,True,0.114,0.4119,2023-04-11
+2022/2023,QF,Milan,Napoli,Milan,0.2162,1824.4,1934.0,Napoli,False,0.6143,1.5316,2023-04-12
+2022/2023,QF,Benfica,Inter,Inter,0.5454,1843.0,1823.1,Benfica,False,0.2975,0.7883,2023-04-11
+2022/2023,SF,Real Madrid,Manchester City,Manchester City,0.1804,1939.3,2069.3,Manchester City,True,0.0325,0.1989,2023-05-09
+2022/2023,SF,Milan,Inter,Inter,0.4112,1843.0,1873.1,Inter,True,0.1691,0.5297,2023-05-10
+2022/2023,Final,Manchester City,Inter,Manchester City,0.8188,2071.6,1888.8,Manchester City,True,0.0328,0.1999,2023-06-10
+2023/2024,R16,Inter,Atletico Madrid,Atletico Madrid,0.7574,1963.2,1858.8,Inter,False,0.5737,1.4163,2024-02-20
+2023/2024,R16,PSV,Borussia Dortmund,Borussia Dortmund,0.3796,1811.5,1851.1,Borussia Dortmund,True,0.1441,0.4774,2024-02-20
+2023/2024,R16,PSG,Real Sociedad,PSG,0.6978,1879.5,1801.0,PSG,True,0.0913,0.3598,2024-02-14
+2023/2024,R16,SSC Napoli,Barcelona,Barcelona,0.3574,1805.0,1855.4,Barcelona,True,0.1277,0.4422,2024-02-21
+2023/2024,R16,FC Porto,Arsenal,Arsenal,0.1368,1784.2,1944.0,Arsenal,True,0.0187,0.1471,2024-02-21
+2023/2024,R16,Lazio,Bayern Munich,Bayern Munich,0.1248,1769.2,1940.8,Bayern Munich,True,0.0156,0.1333,2024-02-14
+2023/2024,R16,RB Leipzig,Real Madrid,Real Madrid,0.1386,1813.4,1971.7,Real Madrid,True,0.0192,0.1492,2024-02-13
+2023/2024,R16,FC København,Manchester City,Manchester City,0.0144,1647.8,2051.4,Manchester City,True,0.0002,0.0145,2024-02-13
+2023/2024,QF,Atletico Madrid,Borussia Dortmund,Borussia Dortmund,0.4034,1838.1,1870.8,Borussia Dortmund,True,0.1627,0.5165,2024-04-10
+2023/2024,QF,PSG,Barcelona,PSG,0.5252,1900.3,1888.2,PSG,True,0.2254,0.644,2024-04-10
+2023/2024,QF,Arsenal,Bayern Munich,Bayern Munich,0.6294,1969.3,1922.0,Arsenal,False,0.3961,0.9926,2024-04-09
+2023/2024,QF,Real Madrid,Manchester City,Real Madrid,0.2816,1973.8,2053.3,Manchester City,False,0.5161,1.2673,2024-04-09
+2023/2024,SF,Borussia Dortmund,PSG,Borussia Dortmund,0.3804,1879.5,1918.8,PSG,False,0.3839,0.9665,2024-05-01
+2023/2024,SF,Bayern Munich,Real Madrid,Real Madrid,0.3632,1938.0,1983.6,Real Madrid,True,0.1319,0.4513,2024-04-30
+2023/2024,Final,Borussia Dortmund,Real Madrid,Real Madrid,0.2684,1877.6,1995.3,Real Madrid,True,0.072,0.3125,2024-06-01
+2024/2025,R16,Juventus,PSV,PSV,0.6124,1842.5,1798.5,Juventus,False,0.375,0.9478,2025-02-11
+2024/2025,R16,Manchester City,Real Madrid,Real Madrid,0.4798,1948.1,1949.8,Real Madrid,True,0.2302,0.6535,2025-02-11
+2024/2025,R16,Brest,PSG,PSG,0.0798,1692.2,1920.9,PSG,True,0.0064,0.0832,2025-02-11
+2024/2025,R16,Club Brugge,Atalanta,Club Brugge,0.1208,1724.2,1902.0,Atalanta,False,0.773,2.1136,2025-02-12
+2024/2025,R16,Monaco,Benfica,Benfica,0.4272,1758.3,1777.4,Benfica,True,0.1825,0.5572,2025-02-12
+2024/2025,R16,Sporting CP,Borussia Dortmund,Borussia Dortmund,0.641,1817.4,1764.7,Sporting CP,False,0.4109,1.0244,2025-02-11
+2024/2025,R16,Celtic,Bayern Munich,Bayern Munich,0.094,1688.4,1893.6,Bayern Munich,True,0.0088,0.0987,2025-02-12
+2024/2025,R16,Feyenoord,Milan,Feyenoord,0.268,1738.3,1821.9,Milan,False,0.5358,1.3168,2025-02-12
+2024/2025,R16,PSV,Arsenal,Arsenal,0.1288,1816.8,1985.1,Arsenal,True,0.0166,0.1379,2025-03-04
+2024/2025,R16,Real Madrid,Atletico Madrid,Real Madrid,0.7182,1969.9,1881.0,Real Madrid,True,0.0794,0.331,2025-03-04
+2024/2025,R16,PSG,Liverpool,PSG,0.3426,1946.9,2003.3,Liverpool,False,0.4322,1.0712,2025-03-05
+2024/2025,R16,Club Brugge,Aston Villa,Aston Villa,0.353,1733.0,1784.2,Aston Villa,True,0.1246,0.4354,2025-03-04
+2024/2025,R16,Benfica,Barcelona,Barcelona,0.1672,1783.1,1920.2,Barcelona,True,0.028,0.183,2025-03-05
+2024/2025,R16,Borussia Dortmund,Lille,Borussia Dortmund,0.4194,1775.6,1799.7,Lille,False,0.3371,0.8689,2025-03-04
+2024/2025,R16,Bayern Munich,Bayer Leverkusen,Bayern Munich,0.499,1911.9,1910.7,Bayer Leverkusen,False,0.251,0.6951,2025-03-05
+2024/2025,R16,Feyenoord,Inter,Inter,0.1032,1752.1,1943.8,Inter,True,0.0107,0.1089,2025-03-05
+2024/2025,QF,Arsenal,Real Madrid,Arsenal,0.6002,2001.2,1964.1,Arsenal,True,0.1598,0.5105,2025-04-08
+2024/2025,QF,PSG,Aston Villa,PSG,0.7854,1959.5,1841.1,PSG,True,0.0461,0.2416,2025-04-09
+2024/2025,QF,Barcelona,Borussia Dortmund,Barcelona,0.8438,1948.4,1789.8,Barcelona,True,0.0244,0.1698,2025-04-09
+2024/2025,QF,Bayern Munich,Inter,Inter,0.366,1920.2,1965.1,Inter,True,0.134,0.4557,2025-04-08
+2024/2025,SF,Arsenal,PSG,PSG,0.657,2015.5,1956.7,Arsenal,False,0.4316,1.07,2025-04-29
+2024/2025,SF,Barcelona,Inter,Inter,0.4898,1955.3,1955.0,Inter,True,0.2399,0.673,2025-04-30
+2024/2025,Final,PSG,Inter,PSG,0.4806,1949.7,1957.7,Inter,False,0.2698,0.7327,2025-05-31

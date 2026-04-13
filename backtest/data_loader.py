@@ -45,6 +45,55 @@ BACKTEST_CLUBELO_ALIASES: dict[str, str] = {
     "FC Kobenhavn": "FC Kobenhavn",
 }
 
+# Canonical team name → clubelo URL-safe API name for per-team history endpoint.
+# Needed to fetch historical Elo time-series for backtest; superset of the
+# current-season CLUBELO_API_NAMES (which only covers the 8 UCL QF teams).
+BACKTEST_API_NAMES: dict[str, str] = {
+    "Ajax": "Ajax",
+    "Arsenal": "Arsenal",
+    "Aston Villa": "AstonVilla",
+    "Atalanta": "Atalanta",
+    "Atletico Madrid": "Atletico",
+    "Barcelona": "Barcelona",
+    "Bayer Leverkusen": "Leverkusen",
+    "Bayern Munich": "Bayern",
+    "Benfica": "Benfica",
+    "Borussia Dortmund": "Dortmund",
+    "Borussia M'Gladbach": "Gladbach",
+    "Brest": "Brest",
+    "Celtic": "Celtic",
+    "Chelsea": "Chelsea",
+    "Club Brugge": "Brugge",
+    "Eintracht Frankfurt": "Frankfurt",
+    "FC København": "FCKobenhavn",
+    "FC Copenhagen": "FCKobenhavn",
+    "FC Porto": "Porto",
+    "Feyenoord": "Feyenoord",
+    "Inter": "Inter",
+    "Juventus": "Juventus",
+    "Lazio": "Lazio",
+    "Lille": "Lille",
+    "Liverpool": "Liverpool",
+    "Manchester City": "ManCity",
+    "Manchester United": "ManUnited",
+    "Milan": "Milan",
+    "AC Milan": "Milan",
+    "Monaco": "Monaco",
+    "Napoli": "Napoli",
+    "SSC Napoli": "Napoli",
+    "PSG": "ParisSG",
+    "PSV": "PSV",
+    "PSV Eindhoven": "PSV",
+    "RB Leipzig": "RBLeipzig",
+    "RB Salzburg": "Salzburg",
+    "Real Madrid": "RealMadrid",
+    "Real Sociedad": "Sociedad",
+    "Sevilla": "Sevilla",
+    "Sporting CP": "Sporting",
+    "Tottenham": "Tottenham",
+    "Villarreal": "Villarreal",
+}
+
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 
 _SESSION = requests.Session()
@@ -59,6 +108,50 @@ def load_seasons(season_files: list[str] | None = None) -> list[dict]:
     out = []
     for f in files:
         out.append(json.loads(f.read_text()))
+    return out
+
+
+BACKTEST_HISTORY_CACHE = Path(__file__).resolve().parent / "cache_histories"
+
+
+@lru_cache(maxsize=64)
+def fetch_team_history(team: str) -> pd.DataFrame:
+    """Fetch (and cache) full Elo history for an arbitrary team from clubelo.com."""
+    BACKTEST_HISTORY_CACHE.mkdir(parents=True, exist_ok=True)
+    cache = BACKTEST_HISTORY_CACHE / f"{team.replace(' ', '_').replace('/', '_')}.parquet"
+    if cache.exists():
+        try:
+            return pd.read_parquet(cache)
+        except Exception:
+            pass
+
+    api_name = BACKTEST_API_NAMES.get(team)
+    if api_name is None:
+        raise KeyError(f"No clubelo API mapping for '{team}'")
+    url = f"{CLUBELO_API_BASE}/{api_name}"
+    resp = _SESSION.get(url, timeout=30)
+    resp.raise_for_status()
+    df = pd.read_csv(io.StringIO(resp.text), header=0)
+    df = df.rename(columns={"From": "date_from", "To": "date_to", "Elo": "elo"})
+    df["date_from"] = pd.to_datetime(df["date_from"])
+    df["date_to"] = pd.to_datetime(df["date_to"])
+    df = df[["date_from", "date_to", "elo"]].sort_values("date_from").reset_index(drop=True)
+
+    try:
+        df.to_parquet(cache)
+    except Exception:
+        pass
+    return df
+
+
+def truncate_history(history_df: pd.DataFrame, cutoff_date: str) -> pd.DataFrame:
+    """Return only the rows whose period ends before (strict) the cutoff date.
+
+    Prevents look-ahead when backtesting: for a tie played on date T, the
+    strength forecaster can only see Elo rows with date_to < T.
+    """
+    cutoff = pd.Timestamp(cutoff_date)
+    out = history_df[history_df["date_to"] < cutoff].copy()
     return out
 
 

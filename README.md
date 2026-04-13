@@ -160,7 +160,27 @@ python scripts/fetch_historical_brackets.py   # cache 5 seasons of bracket + res
 python scripts/run_backtest.py                # run model on all ties, write report
 ```
 
-Layers 2-3 (TSFM / xG / injuries on top of Elo) not yet backtested — the Layer 1 result establishes the baseline to beat.
+### Layer 2 backtest: Elo + TSFM ensemble
+
+Same 83 ties, but each team's Elo is replaced with the ensemble forecast from 3 TSFM models (Chronos-2, TimesFM-2.5, FlowState) fed a 260-week history truncated to the tie date. See [backtest/results/layer2_tsfm_ensemble.md](backtest/results/layer2_tsfm_ensemble.md).
+
+| Metric | Layer 2 | Layer 1 | Coin flip |
+|--------|---------|---------|-----------|
+| Hit rate | **63.9%** (53/83) | 63.9% | 50.0% |
+| Brier | 0.219 | 0.220 | 0.250 |
+| Log loss | 0.620 | 0.622 | 0.693 |
+
+**Verdict: TSFM adds essentially zero signal** on top of Elo for knockout prediction.
+
+- Only **4 ties out of 83** had a different top pick between L1 and L2; all four were coin-flip ties where both models hovered around 49-51%
+- 2 flips helped, 2 flips hurt → net zero
+- Brier and log loss improve by <1% — statistically indistinguishable
+
+**Why**: TSFM forecasts Elo ~1-8 weeks ahead, but team strength doesn't drift meaningfully in that window. Current Elo ≈ forecasted Elo. The heavyweight time-series models add complexity without improving short-horizon predictions.
+
+**Implication for live predictions**: keep the TSFM ensemble in `run_predictions.py` for uncertainty quantification (quantile ranges are still useful for sizing Kelly bets) but don't expect point-prediction improvements over the Elo baseline.
+
+Layer 3 (add xG + injuries) not yet backtested — the first-leg xG signal by construction only applies to 2nd legs onward, so it can only affect ~7 of 83 ties (the QFs where we have both legs). Injuries can't be reliably reconstructed from FotMob historical data. Both signals are **current-round-only** enhancements.
 
 ## First-Leg Elo Adjustment (xG-weighted)
 
