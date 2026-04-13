@@ -4,3 +4,8 @@ __pycache__
 data/cache/
 .pytest_cache/
 results/
+
+# Proxy credentials
+proxies.txt
+secrets/
+.env

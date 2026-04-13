@@ -37,14 +37,14 @@ FIRST_LEG_RESULTS = {
 }
 
 # ── First-leg xG (expected goals) ──────────────────────────────────────────
-# Post-match xG feeds the Elo adjustment step (see elo_adjuster). These are
-# scoreline-regressed placeholders; override with real values from FBref /
-# FotMob / Opta match reports for a sharper signal.
+# Real post-match xG from FotMob shotmap (fetched 2026-04-13 via Playwright
+# + residential proxy; see scripts/refresh_xg.py). Values = sum of per-shot
+# expectedGoals for each team.
 FIRST_LEG_XG = {
-    "QF1": {"home_xg": 1.7, "away_xg": 0.9},   # PSG 2-0 Liverpool
-    "QF2": {"home_xg": 1.5, "away_xg": 1.4},   # Real 1-2 Bayern
-    "QF3": {"home_xg": 0.8, "away_xg": 1.6},   # Barça 0-2 Atleti
-    "QF4": {"home_xg": 0.7, "away_xg": 1.2},   # Sporting 0-1 Ars
+    "QF1": {"home_xg": 2.35, "away_xg": 0.17},   # PSG 2-0 Liverpool (PSG dominated)
+    "QF2": {"home_xg": 2.22, "away_xg": 2.92},   # Real 1-2 Bayern  (both attacked, Bayern +0.70)
+    "QF3": {"home_xg": 1.10, "away_xg": 0.43},   # Barça 0-2 Atleti (Barça HAD more xG but lost)
+    "QF4": {"home_xg": 0.72, "away_xg": 1.32},   # Sporting 0-1 Arsenal
 }
 
 # ── First-leg Elo adjustment ───────────────────────────────────────────────
