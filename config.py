@@ -64,6 +64,61 @@ FIRST_LEG_ELO_K = 10.0
 FIRST_LEG_RESIDUAL_CAP = 2.5
 FIRST_LEG_ADJUSTMENT_ENABLED = True
 
+# ── Injury-based Elo adjustment ────────────────────────────────────────────
+# FotMob per-team injury list → Elo penalty proportional to the injured
+# player's market value (proxy for "how key" they are) and the share of the
+# remaining tournament they're expected to miss.
+INJURY_ADJUSTMENT_ENABLED = True
+
+# FotMob team IDs (public league endpoint; no auth needed)
+FOTMOB_TEAM_IDS = {
+    "PSG": 9847,
+    "Liverpool": 8650,
+    "Real Madrid": 8633,
+    "Bayern Munich": 9823,
+    "Barcelona": 8634,
+    "Atletico Madrid": 9906,
+    "Sporting CP": 9768,
+    "Arsenal": 9825,
+}
+
+# Base Elo penalty per tier (€M transfer value → Elo deduction if out full tournament).
+# Values calibrated to football analytics literature: a top-5 superstar
+# missing ≈ 30-40 Elo; a rotation player ≈ 3-5 Elo.
+INJURY_TIERS = [
+    (80.0, 30.0),   # Superstar (≥€80M): −30 Elo
+    (40.0, 15.0),   # Key starter (€40-80M): −15 Elo
+    (15.0,  7.0),   # Regular starter (€15-40M): −7 Elo
+    ( 0.0,  3.0),   # Squad player (<€15M): −3 Elo
+]
+
+# Maps FotMob `expectedReturn` → fraction of remaining UCL matches missed.
+# The remaining bracket is ~5 matches per team (QF2 + SF1 + SF2 + Final + buffer).
+# "Late April 2026" = misses QF 2nd leg; returns for SF onwards.
+INJURY_RETURN_WEIGHTS = {
+    "out for season":           1.00,
+    "out for 2026":             1.00,
+    "early august 2026":        1.00,
+    "early june 2026":          0.80,
+    "late may 2026":            0.60,
+    "early may 2026":           0.40,
+    "late april 2026":          0.25,
+    "early april 2026":         0.15,
+    "about 1-2 weeks":          0.20,
+    "about a week":             0.15,
+    "doubtful":                 0.50,
+    "unknown":                  0.40,
+}
+INJURY_DEFAULT_WEIGHT = 0.40  # unrecognised string → assume moderate impact
+
+# Per-team override list — use when FotMob misses something known from news.
+# Format: {"Team Name": [{"name": "...", "transfer_value_m": 50, "expected_return": "..."}]}
+MANUAL_INJURY_OVERRIDES: dict[str, list[dict]] = {}
+
+# Cap total injury penalty per team (avoid extreme Elo collapses even if 5+
+# superstars are out; beyond this the model becomes unreliable anyway).
+INJURY_TOTAL_CAP = 60.0
+
 # ── Bracket structure (from the official Feb 27 draw) ─────────────────────
 # SF home/away is fixed by bracket position, NOT by seeding.
 # In each SF pairing, the team from the "bottom" QF in the bracket gets

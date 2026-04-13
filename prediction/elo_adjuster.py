@@ -16,6 +16,10 @@ from config import (
     FIRST_LEG_RESIDUAL_CAP,
     FIRST_LEG_RESULTS,
     FIRST_LEG_XG,
+    INJURY_DEFAULT_WEIGHT,
+    INJURY_RETURN_WEIGHTS,
+    INJURY_TIERS,
+    INJURY_TOTAL_CAP,
     UCL_HOME_ADVANTAGE_ELO,
     XG_BLEND_ALPHA,
 )
@@ -104,6 +108,109 @@ def adjust_elos_for_first_legs(
     """Convenience wrapper: compute + apply first-leg Elo adjustments."""
     adjustments = compute_first_leg_adjustments(elos, xg_data=xg_data)
     return apply_adjustments(elos, adjustments), adjustments
+
+
+@dataclass
+class InjuryPenalty:
+    team: str
+    player: str
+    transfer_value_m: float
+    tier_base: float
+    availability_weight: float  # fraction of remaining matches missed
+    expected_return: str
+    elo_penalty: float          # negative contribution
+
+
+def _tier_base(transfer_value_m: float) -> float:
+    for threshold, penalty in INJURY_TIERS:
+        if transfer_value_m >= threshold:
+            return penalty
+    return INJURY_TIERS[-1][1]
+
+
+def _return_weight(expected_return: str) -> float:
+    key = (expected_return or "").strip().lower()
+    return INJURY_RETURN_WEIGHTS.get(key, INJURY_DEFAULT_WEIGHT)
+
+
+def compute_injury_penalties(
+    injuries_by_team: dict[str, list],
+    total_cap: float = INJURY_TOTAL_CAP,
+) -> tuple[dict[str, float], list[InjuryPenalty]]:
+    """Return (elo_delta_by_team, per_player_breakdown).
+
+    `injuries_by_team` values are Injury-like objects with attrs:
+      .player, .transfer_value_m, .expected_return
+    """
+    team_deltas: dict[str, float] = {}
+    breakdown: list[InjuryPenalty] = []
+
+    for team, injuries in injuries_by_team.items():
+        team_total = 0.0
+        for inj in injuries:
+            tier = _tier_base(inj.transfer_value_m)
+            w = _return_weight(inj.expected_return)
+            penalty = tier * w  # positive magnitude
+            team_total += penalty
+            breakdown.append(
+                InjuryPenalty(
+                    team=team,
+                    player=inj.player,
+                    transfer_value_m=inj.transfer_value_m,
+                    tier_base=tier,
+                    availability_weight=w,
+                    expected_return=inj.expected_return,
+                    elo_penalty=-penalty,
+                )
+            )
+        team_deltas[team] = -min(team_total, total_cap)
+
+    return team_deltas, breakdown
+
+
+def apply_injury_penalties(
+    elos: dict[str, float],
+    team_deltas: dict[str, float],
+) -> dict[str, float]:
+    adjusted = dict(elos)
+    for team, delta in team_deltas.items():
+        if team in adjusted:
+            adjusted[team] = adjusted[team] + delta
+    return adjusted
+
+
+def format_injury_report(
+    team_deltas: dict[str, float],
+    breakdown: list[InjuryPenalty],
+) -> str:
+    lines = [
+        f"{'Team':<20s} {'ΔElo':>8s} {'Players':>8s}",
+        "-" * 40,
+    ]
+    counts: dict[str, int] = {}
+    for b in breakdown:
+        counts[b.team] = counts.get(b.team, 0) + 1
+    for team in sorted(team_deltas, key=team_deltas.get):
+        lines.append(
+            f"{team:<20s} {team_deltas[team]:+8.1f} {counts.get(team, 0):>8d}"
+        )
+    # Top individual penalties
+    top = sorted(breakdown, key=lambda b: b.elo_penalty)[:10]
+    if top:
+        lines.append("")
+        lines.append(
+            f"{'Top player-level hits':<36s} {'€M':>6s} {'Wgt':>5s} {'ΔElo':>7s}  {'Return':<20s}"
+        )
+        lines.append("-" * 82)
+        for b in top:
+            if b.elo_penalty >= 0:
+                break
+            label = f"{b.team} · {b.player}"
+            lines.append(
+                f"{label:<36s} {b.transfer_value_m:6.0f} {b.availability_weight:5.2f} "
+                f"{b.elo_penalty:+7.2f}  {b.expected_return:<20s}"
+            )
+    return "\n".join(lines)
 
 
 def format_adjustments_report(

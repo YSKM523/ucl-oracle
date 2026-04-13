@@ -15,16 +15,21 @@ from config import (
     FIRST_LEG_ADJUSTMENT_ENABLED,
     FIRST_LEG_RESULTS,
     FIRST_LEG_XG,
+    INJURY_ADJUSTMENT_ENABLED,
     MONTE_CARLO_SIMULATIONS,
     RESULTS_DIR,
     UCL_TEAMS,
 )
 from data.fetcher_clubelo import fetch_current_elos
+from data.fetcher_injuries import fetch_all_injuries
 from data.fetcher_xg import fetch_first_leg_xg
 from markets.edge_detector import detect_edges, format_edge_report, kelly_fraction
 from prediction.elo_adjuster import (
     adjust_elos_for_first_legs,
+    apply_injury_penalties,
+    compute_injury_penalties,
     format_adjustments_report,
+    format_injury_report,
 )
 from prediction.knockout_simulator import run_monte_carlo
 
@@ -63,6 +68,14 @@ def run_elo_baseline() -> tuple[pd.DataFrame, dict[str, float]]:
         before = dict(elos)
         elos, adjustments = adjust_elos_for_first_legs(elos, xg_data=xg_data)
         print(format_adjustments_report(adjustments, before, elos))
+
+    # Injury-based Elo penalty (feeds every stage from here on)
+    if INJURY_ADJUSTMENT_ENABLED:
+        print("\n  Fetching injury lists from FotMob …")
+        injuries = fetch_all_injuries()
+        team_deltas, breakdown = compute_injury_penalties(injuries)
+        elos = apply_injury_penalties(elos, team_deltas)
+        print(format_injury_report(team_deltas, breakdown))
 
     # Monte Carlo
     print(f"\n[3/3] Running {MONTE_CARLO_SIMULATIONS:,} Monte Carlo simulations …")
@@ -207,6 +220,14 @@ def run_tsfm_predictions() -> tuple[pd.DataFrame, dict[str, float]]:
         for mn, elos_m in list(model_elos.items()):
             adjusted, _ = adjust_elos_for_first_legs(elos_m, xg_data=xg_data)
             model_elos[mn] = adjusted
+
+    # Apply injury penalty to every model's Elo dict (fetched once, shared)
+    if INJURY_ADJUSTMENT_ENABLED:
+        print("\n  Applying injury penalties to each model:")
+        injuries = fetch_all_injuries()
+        team_deltas, _ = compute_injury_penalties(injuries)
+        for mn in list(model_elos.keys()):
+            model_elos[mn] = apply_injury_penalties(model_elos[mn], team_deltas)
 
     # Run Monte Carlo for each model
     print("\n[3/4] Running Monte Carlo per model …")

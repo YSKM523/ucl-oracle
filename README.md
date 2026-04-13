@@ -2,67 +2,93 @@
 
 AI predictions for the 2025-26 UEFA Champions League winner, from the quarterfinal stage onwards.
 
-Uses **TSFM + Club Elo + xG-adjusted first-leg Elo + Poisson Scoreline + Monte Carlo** architecture. Compares predictions against Polymarket odds to find edges.
+Uses **TSFM + Club Elo + xG first-leg adjustment + injury-weighted Elo + Poisson Scoreline + Monte Carlo** architecture. Compares predictions against Polymarket odds to find edges.
 
 **Author:** [YSKM](https://github.com/YSKM523) | **License:** MIT | **Language:** Python
 
 Sister projects: [worldcup-oracle](../worldcup-oracle) | [fin-forecast-arena](../fin-forecast-arena)
 
-## Predictions (April 12, 2026 — xG-Adjusted, 2 Days Before Second Legs)
+## Predictions (April 12, 2026 — xG + Injury Adjusted, 2 Days Before Second Legs)
 
-Model now applies a **first-leg xG performance adjustment** to team Elo before SF/Final simulation (see *First-Leg Elo Adjustment* section below). QF aggregates still use actual goals.
+Model applies two Elo adjustments before Monte Carlo: (1) first-leg xG performance residual, (2) per-player injury penalties weighted by market value × expected availability. QF aggregates still use actual goals.
 
 ### UCL Winner Probabilities
 
 | Rank | Team | AI Win% | Polymarket | Edge | Signal |
 |------|------|---------|------------|------|--------|
-| 1 | **Arsenal** | **53.8%** | 25.5% | **+28.3%** | **STRONG BUY** |
-| 2 | Bayern Munich | 27.0% | 32.5% | -5.5% | **STRONG SELL** |
-| 3 | PSG | 11.3% | 20.5% | -9.2% | **STRONG SELL** |
-| 4 | Atletico Madrid | 3.8% | 7.2% | -3.4% | SELL |
-| 5 | Barcelona | 1.3% | 6.9% | -5.5% | **STRONG SELL** |
-| 6 | Real Madrid | 1.2% | 5.1% | -3.9% | SELL |
-| 7 | Liverpool | 1.2% | 1.9% | -0.8% | — |
-| 8 | Sporting CP | 0.4% | 0.7% | -0.3% | — |
+| 1 | **Arsenal** | **44.2%** | 25.5% | **+18.7%** | **STRONG BUY** |
+| 2 | Bayern Munich | 31.2% | 32.0% | -0.8% | — |
+| 3 | PSG | 14.6% | 23.0% | -8.4% | **STRONG SELL** |
+| 4 | Atletico Madrid | 5.6% | 7.0% | -1.4% | — |
+| 5 | Barcelona | 1.5% | 7.0% | -5.5% | **STRONG SELL** |
+| 6 | Real Madrid | 1.5% | 5.0% | -3.5% | SELL |
+| 7 | Liverpool | 0.9% | 1.9% | -1.0% | — |
+| 8 | Sporting CP | 0.5% | 0.8% | -0.2% | — |
 
 ### QF Advancement Probabilities (Who Reaches Semis?)
 
 | Team | AI Adv% | Polymarket | Edge | Signal |
 |------|---------|------------|------|--------|
-| Arsenal | **96.9%** | 90.5% | **+6.4%** | **STRONG BUY** |
-| **Bayern Munich** | **91.3%** | **84.5%** | **+6.8%** | **STRONG BUY** |
-| **Atletico Madrid** | **88.1%** | **73.0%** | **+15.1%** | **STRONG BUY** |
-| PSG | 86.2% | 87.5% | -1.3% | — |
-| Liverpool | 13.8% | 12.5% | +1.3% | — |
-| **Barcelona** | **11.9%** | **28.0%** | **-16.1%** | **STRONG SELL** |
-| **Real Madrid** | **8.7%** | **16.0%** | **-7.3%** | **STRONG SELL** |
-| **Sporting CP** | **3.1%** | **10.5%** | **-7.4%** | **STRONG SELL** |
+| Arsenal | **95.7%** | 90.5% | **+5.2%** | **STRONG BUY** |
+| **Bayern Munich** | **91.0%** | **84.5%** | **+6.5%** | **STRONG BUY** |
+| **Atletico Madrid** | **88.6%** | **73.0%** | **+15.6%** | **STRONG BUY** |
+| PSG | 88.5% | 87.5% | +1.0% | — |
+| Liverpool | 11.5% | 12.5% | -1.0% | — |
+| **Barcelona** | **11.4%** | **28.0%** | **-16.6%** | **STRONG SELL** |
+| **Real Madrid** | **9.0%** | **14.5%** | **-5.5%** | **STRONG SELL** |
+| **Sporting CP** | **4.3%** | **10.5%** | **-6.2%** | **STRONG SELL** |
 
 ### Per-Model Breakdown (P(Champion))
 
 | Team | Chronos-2 | TimesFM-2.5 | FlowState | Elo Baseline | **Ensemble** |
 |------|-----------|-------------|-----------|-------------|:------------|
-| Arsenal | 53.9% | 54.1% | 54.4% | 52.7% | **53.8%** |
-| Bayern Munich | 26.9% | 26.9% | 26.3% | 27.9% | **27.0%** |
-| PSG | 11.2% | 11.1% | 11.3% | 11.6% | **11.3%** |
-| Atletico Madrid | 3.6% | 3.6% | 3.6% | 4.4% | **3.8%** |
-| Barcelona | 1.5% | 1.4% | 1.5% | 0.9% | **1.3%** |
-| Real Madrid | 1.3% | 1.3% | 1.3% | 1.1% | **1.2%** |
-| Liverpool | 1.3% | 1.2% | 1.2% | 1.0% | **1.2%** |
-| Sporting CP | 0.4% | 0.4% | 0.4% | 0.3% | **0.4%** |
+| Arsenal | 44.3% | 44.6% | 45.1% | 42.7% | **44.2%** |
+| Bayern Munich | 31.1% | 31.1% | 30.5% | 32.0% | **31.2%** |
+| PSG | 14.5% | 14.4% | 14.6% | 15.0% | **14.6%** |
+| Atletico Madrid | 5.2% | 5.2% | 5.2% | 6.6% | **5.6%** |
+| Barcelona | 1.7% | 1.7% | 1.7% | 1.0% | **1.5%** |
+| Real Madrid | 1.6% | 1.6% | 1.5% | 1.4% | **1.5%** |
+| Liverpool | 1.0% | 0.9% | 0.9% | 0.8% | **0.9%** |
+| Sporting CP | 0.5% | 0.5% | 0.5% | 0.5% | **0.5%** |
 
 ## Biggest Edges
 
 | Team | Market | AI | Mkt | Edge | Kelly | Signal |
 |------|--------|-----|------|------|-------|--------|
-| Arsenal | Winner | 53.8% | 25.5% | +28.3% | 19.0% | **STRONG BUY** |
-| Atletico Madrid | QF Adv | 88.1% | 73.0% | +15.1% | 27.9% | **STRONG BUY** |
-| Barcelona | QF Adv | 11.9% | 28.0% | -16.1% | — | **STRONG SELL** |
-| PSG | Winner | 11.3% | 20.5% | -9.2% | — | **STRONG SELL** |
-| Sporting CP | QF Adv | 3.1% | 10.5% | -7.4% | — | **STRONG SELL** |
-| Real Madrid | QF Adv | 8.7% | 16.0% | -7.3% | — | **STRONG SELL** |
-| Bayern Munich | QF Adv | 91.3% | 84.5% | +6.8% | 21.8% | **STRONG BUY** |
-| Arsenal | QF Adv | 96.9% | 90.5% | +6.4% | 33.8% | **STRONG BUY** |
+| Arsenal | Winner | 44.2% | 25.5% | +18.7% | 12.5% | **STRONG BUY** |
+| Atletico Madrid | QF Adv | 88.6% | 73.0% | +15.6% | 28.9% | **STRONG BUY** |
+| Barcelona | QF Adv | 11.4% | 28.0% | -16.6% | — | **STRONG SELL** |
+| PSG | Winner | 14.6% | 23.0% | -8.4% | — | **STRONG SELL** |
+| Bayern Munich | QF Adv | 91.0% | 84.5% | +6.5% | 20.9% | **STRONG BUY** |
+| Sporting CP | QF Adv | 4.3% | 10.5% | -6.2% | — | **STRONG SELL** |
+| Real Madrid | QF Adv | 9.0% | 14.5% | -5.5% | — | **STRONG SELL** |
+| Arsenal | QF Adv | 95.7% | 90.5% | +5.2% | 27.4% | **STRONG BUY** |
+
+## Injury-Adjusted Elo (April 12, 2026 snapshot)
+
+Pulled live from FotMob per-team endpoints. Each injured player contributes
+`tier_base × availability_weight` of Elo penalty to their team; cap = 60 Elo per team.
+
+| Team | ΔElo | Injured | Biggest hit |
+|------|------|---------|-------------|
+| **Arsenal** | **−46.5** | 5 | Saka (€98M, Doubtful), Ødegaard (€72M), Timber (€65M), Calafiori (€51M), Merino (€40M) |
+| **Liverpool** | **−26.7** | 6 | Jones (€49M, Doubtful), Bradley (€39M, out for season), Leoni (€31M), Alisson (€17M) |
+| Barcelona | −11.1 | 4 | Raphinha (€77M, Early May) |
+| Bayern Munich | −9.1 | 5 | Karl (€39M, Late April) |
+| Sporting CP | −7.8 | 3 | Ioannidis (€23M, Doubtful) |
+| Real Madrid | −6.8 | 2 | Rodrygo (€56M, Early Dec — out), Courtois (€11M) |
+| PSG | −5.5 | 3 | Barcola (€71M, Late April), Fabián (€28M) |
+| Atletico Madrid | −5.0 | 2 | Hancko (€35M, Doubtful), Giménez (€14M) |
+
+**Effect on predictions** (vs xG-only April 12 run):
+
+- **Arsenal winner: 53.8% → 44.2% (−9.6pp)** — the injury pile-up (especially Saka doubtful) is the single biggest model revision of the day
+- **Bayern winner: 27.0% → 31.2% (+4.2pp)** — Arsenal's loss is everyone else's gain; Bayern now nearly ties the market price (31.2% vs 32.0%)
+- **PSG winner: 11.3% → 14.6% (+3.3pp)** — narrower STRONG SELL; the bracket advantage Arsenal had is less crushing
+- **Atletico winner: 3.8% → 5.6%** (+1.8pp)
+- **QF advance changes are small** (all already high) — injuries mostly reshape SF/Final conditional probabilities
+
+**Why the signal is so lopsided toward Arsenal**: the doubtful list includes Saka, Ødegaard, Timber, Calafiori, and Merino — five of their top six starters. Even conservatively weighting "Doubtful" at 0.5, that's cumulative -46.5 Elo, nearly the per-team cap.
 
 ## First-Leg Elo Adjustment (xG-weighted)
 
@@ -116,9 +142,14 @@ clubelo.com (5yr weekly Elo for 8 teams)
             Equal-weight ensemble
                     │
                     ▼
-       First-leg Elo adjustment (NEW)
+       First-leg Elo adjustment
     xG-blended residual vs Elo expectation
      → ΔElo feeds SF/Final simulations
+                    │
+                    ▼
+       Injury-weighted Elo penalty (NEW)
+    FotMob squad endpoint · market-value tier
+     × availability weight → team Elo hit
                     │
                     ▼
          Elo → Poisson goal model
@@ -155,12 +186,20 @@ clubelo.com (5yr weekly Elo for 8 teams)
 | xG blend α | 0.6 | Weights xG above actual goals (xG more predictive) |
 | First-leg K | 10 | ΔElo per 1-goal residual (~1 week of form shift) |
 | Residual cap | ±2.5 | Prevents blowouts from dominating adjustment |
+| Injury tier (≥€80M) | −30 Elo | Superstar missing full tournament |
+| Injury tier (€40-80M) | −15 Elo | Key starter |
+| Injury tier (€15-40M) | −7 Elo | Regular starter |
+| Injury tier (<€15M) | −3 Elo | Squad/rotation |
+| "Doubtful" weight | 0.5 | Half penalty (uncertain) |
+| "Out for season" weight | 1.0 | Full penalty |
+| Per-team injury cap | −60 Elo | Prevents runaway collapses |
 
 ### Data Sources
 
 - **Club Elo**: [clubelo.com](http://clubelo.com) — free historical club Elo ratings
 - **Market odds**: [Polymarket](https://polymarket.com) Gamma API (public, no auth)
 - **xG (match-level)**: [FotMob](https://www.fotmob.com) public league API (best-effort; falls back to `config.FIRST_LEG_XG` placeholders when rate-limited). Override these manually from FBref / Opta match reports for maximum signal.
+- **Injuries**: [FotMob](https://www.fotmob.com) per-team squad endpoint — returns live injury list, expected return date, and player market value. Augment with `config.MANUAL_INJURY_OVERRIDES` for anything FotMob misses.
 - **Models**: HuggingFace (Chronos-2, TimesFM-2.5, FlowState)
 
 ## Current State (April 12, 2026 — Pre-Second-Leg)
