@@ -338,15 +338,17 @@ probability mass on Arsenal, Bayern, PSG, and Atletico.
 ## Usage
 
 ```bash
-# Full pipeline (Elo + TSFM + Polymarket)
-python run_predictions.py
+# Fast mode — Elo + xG + injuries + Polymarket (≈ 10 seconds)
+python run_predictions.py --fast
 
-# Elo baseline only (fast, no TSFM models)
-python run_predictions.py --elo-only
+# Full pipeline — adds TSFM ensemble (≈ 5-7 min, negligible prediction gain)
+python run_predictions.py
 
 # Generate all visualizations
 python generate_plots.py
 ```
+
+`--fast` skips the TSFM time-series forecasters (Chronos-2, TimesFM-2.5, FlowState) and goes straight from current Elo → xG/injury adjustment → Monte Carlo. The [Layer 2 backtest](backtest/results/layer2_tsfm_ensemble.md) across 83 historical ties showed the TSFM ensemble changed the top pick on only 4 ties (2 helpful, 2 harmful) — net zero over pure Elo. Use `--fast` for day-to-day runs; reserve the full pipeline for when you want TSFM's uncertainty bands for Kelly sizing.
 
 ## Setup
 

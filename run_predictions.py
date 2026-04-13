@@ -399,11 +399,27 @@ if __name__ == "__main__":
     )
 
     import argparse
-    parser = argparse.ArgumentParser(description="UCL Oracle Predictions")
-    parser.add_argument("--elo-only", action="store_true", help="Skip TSFM models, Elo baseline only")
+    parser = argparse.ArgumentParser(
+        description="UCL Oracle Predictions",
+        epilog=(
+            "Layer 2 backtest (see backtest/results/layer2_tsfm_ensemble.md) "
+            "showed the TSFM ensemble adds ≤1pp hit-rate over Elo alone, "
+            "so --fast is usually the right choice for day-to-day runs."
+        ),
+    )
+    parser.add_argument(
+        "--fast", "--elo-only",
+        dest="fast",
+        action="store_true",
+        help="Skip TSFM ensemble (Chronos/TimesFM/FlowState). ~30× faster "
+             "(~10s vs 5-7 min). Keeps xG + injury adjustments. "
+             "Recommended default for day-to-day runs.",
+    )
     args = parser.parse_args()
 
-    if args.elo_only:
+    if args.fast:
+        print("▸ Fast mode: skipping TSFM ensemble "
+              "(Layer 2 backtest showed negligible point-prediction improvement).\n")
         results_df, champion_probs = run_elo_baseline()
         run_polymarket_comparison(results_df, champion_probs)
     else:
