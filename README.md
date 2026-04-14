@@ -2,7 +2,7 @@
 
 AI predictions for the 2025-26 UEFA Champions League winner, from the quarterfinal stage onwards.
 
-Uses **TSFM + Club Elo + xG first-leg adjustment + injury-weighted Elo + Poisson Scoreline + Monte Carlo** architecture. Compares predictions against Polymarket odds to find edges.
+Uses **Club Elo + first-leg xG adjustment + injury-weighted Elo + Poisson Scoreline + Monte Carlo** as the production stack, compared against Polymarket odds to find edges. A 3-model TSFM ensemble (Chronos-2 / TimesFM-2.5 / FlowState) is retained behind `--with-tsfm` as an ablation/research layer after a 5-season, 83-tie backtest showed it added no point-prediction skill over pure Elo.
 
 **Author:** [YSKM](https://github.com/YSKM523) | **License:** MIT | **Language:** Python
 
@@ -378,14 +378,7 @@ The adjustment answers the earlier question *"why is PSG so bearish?"* — PSG b
 ## Methodology
 
 ```
-clubelo.com (5yr weekly Elo for 8 teams)
-        │
-        ├── Chronos-2 (Amazon, 120M params)    ─┐
-        ├── TimesFM 2.5 (Google, 200M params)   ├── Elo forecast (8 weeks)
-        └── FlowState (IBM, 9.1M params)       ─┘
-                    │
-                    ▼
-            Equal-weight ensemble
+clubelo.com current-date Elo for 8 teams
                     │
                     ▼
        First-leg Elo adjustment
@@ -393,13 +386,26 @@ clubelo.com (5yr weekly Elo for 8 teams)
      → ΔElo feeds SF/Final simulations
                     │
                     ▼
-       Injury-weighted Elo penalty (NEW)
+       Injury-weighted Elo penalty
     FotMob squad endpoint · market-value tier
      × availability weight → team Elo hit
                     │
                     ▼
          Elo → Poisson goal model
         (team-specific attack/defense)
+
+
+ (Ablation layer, opt-in via --with-tsfm)
+┌─────────────────────────────────────────┐
+│  clubelo 5yr weekly Elo                 │
+│     ├── Chronos-2 (Amazon, 120M)    ─┐  │
+│     ├── TimesFM-2.5 (Google, 200M)   ├─ Elo forecast
+│     └── FlowState (IBM, 9.1M)       ─┘  │
+│                  │                      │
+│        equal-weight ensemble → alt Elo  │
+│  Layer 2 backtest: adds 0 hit-rate vs   │
+│  Elo; retained for ablation integrity.  │
+└─────────────────────────────────────────┘
                     │
                     ▼
           Two-legged tie simulation
@@ -474,17 +480,28 @@ probability mass on Arsenal, Bayern, PSG, and Atletico.
 ## Usage
 
 ```bash
-# Fast mode — Elo + xG + injuries + Polymarket (≈ 10 seconds)
-python run_predictions.py --fast
-
-# Full pipeline — adds TSFM ensemble (≈ 5-7 min, negligible prediction gain)
+# Default — production Elo-stack (Elo + xG + injuries + Polymarket, ~15 seconds)
 python run_predictions.py
 
-# Generate all visualizations
-python generate_plots.py
+# With ablation — ALSO run the 3-model TSFM ensemble (~5-7 min extra)
+python run_predictions.py --with-tsfm
+
+# Visualizations
+python generate_plots.py                # default = Elo-stack plots
+python generate_plots.py --with-tsfm    # also generate TSFM forecast fan charts
 ```
 
-`--fast` skips the TSFM time-series forecasters (Chronos-2, TimesFM-2.5, FlowState) and goes straight from current Elo → xG/injury adjustment → Monte Carlo. The [Layer 2 backtest](backtest/results/layer2_tsfm_ensemble.md) across 83 historical ties showed the TSFM ensemble changed the top pick on only 4 ties (2 helpful, 2 harmful) — net zero over pure Elo. Use `--fast` for day-to-day runs; reserve the full pipeline for when you want TSFM's uncertainty bands for Kelly sizing.
+### Why TSFM is opt-in, not default
+
+The [Layer 2 backtest](backtest/results/layer2_tsfm_ensemble.md) across 83 historical knockout ties showed the TSFM ensemble (Chronos-2 + TimesFM-2.5 + FlowState) added **exactly 0 hit-rate** over pure Elo (both 63.9%), moved top-pick on only 4/83 ties (2 helpful, 2 harmful), and improved Brier by 0.001 — effectively noise.
+
+TSFM is **preserved in the codebase for three reasons**, not removed:
+
+1. **Ablation integrity** — the negative result is itself a useful finding; dropping the models would erase the evidence that complexity doesn't help at this horizon
+2. **Uncertainty bands** — TSFM outputs quantile forecasts (q10 / q90) that could be reused for Kelly sizing once a positive-CLV regime is proven
+3. **Extensibility** — a future rebuild on a different sport / longer horizon might actually benefit from time-series foundation models
+
+Day-to-day production runs use only `run_elo_baseline()` → `run_polymarket_comparison()`. The `--with-tsfm` flag turns the ablation layer back on.
 
 ## Setup
 

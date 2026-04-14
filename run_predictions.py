@@ -442,25 +442,35 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="UCL Oracle Predictions",
         epilog=(
-            "Layer 2 backtest (see backtest/results/layer2_tsfm_ensemble.md) "
-            "showed the TSFM ensemble adds ≤1pp hit-rate over Elo alone, "
-            "so --fast is usually the right choice for day-to-day runs."
+            "Default runs the production stack (Elo + first-leg xG + injuries + "
+            "Monte Carlo → Polymarket). Add --with-tsfm to additionally run the "
+            "3 foundation-model ensemble as an ablation; it added ≤1pp hit rate "
+            "in the Layer 2 backtest, so it's kept purely for research/comparison."
         ),
     )
-    parser.add_argument(
-        "--fast", "--elo-only",
-        dest="fast",
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
+        "--with-tsfm", "--full",
+        dest="with_tsfm",
         action="store_true",
-        help="Skip TSFM ensemble (Chronos/TimesFM/FlowState). ~30× faster "
-             "(~10s vs 5-7 min). Keeps xG + injury adjustments. "
-             "Recommended default for day-to-day runs.",
+        help="ALSO run the TSFM ensemble (Chronos-2 + TimesFM-2.5 + FlowState). "
+             "Slow (~5-7 min extra). Use for ablation / research / uncertainty "
+             "bands, not for point-prediction quality.",
+    )
+    # Kept for backwards-compatibility; --fast is now the default behavior
+    mode.add_argument(
+        "--fast", "--elo-only",
+        dest="fast_legacy",
+        action="store_true",
+        help=argparse.SUPPRESS,
     )
     args = parser.parse_args()
 
-    if args.fast:
-        print("▸ Fast mode: skipping TSFM ensemble "
-              "(Layer 2 backtest showed negligible point-prediction improvement).\n")
+    if args.with_tsfm:
+        print("▸ Full mode: running TSFM ensemble in addition to Elo-stack.")
+        print("  (Layer 2 backtest: TSFM adds ≤1pp hit rate; here as ablation.)\n")
+        run_full_pipeline()
+    else:
+        # Default: production Elo-stack only (no TSFM)
         results_df, champion_probs = run_elo_baseline()
         run_polymarket_comparison(results_df, champion_probs)
-    else:
-        run_full_pipeline()
