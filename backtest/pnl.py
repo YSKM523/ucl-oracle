@@ -24,6 +24,13 @@ import pandas as pd
 
 from markets.signal_log import canonical_event_slug, filter_entries, read_all
 
+# Below this implied probability on the side we're betting, the order book is
+# assumed too thin / stale / rounded to execute against. Guards the Kelly math
+# from fabricating billion-to-one odds when a closed or boundary-priced market
+# would otherwise push decimal odds to infinity.
+MIN_EXECUTABLE_PROB = 0.01
+MAX_EXECUTABLE_PROB = 1 - MIN_EXECUTABLE_PROB
+
 
 @dataclass
 class Bet:
@@ -46,14 +53,26 @@ class Bet:
 
 
 def _full_kelly(p: float, market_prob: float) -> tuple[float, float]:
-    """Return (kelly_fraction, decimal_odds) for a BUY on the event."""
-    # Decimal odds offered = 1 / market_prob (fair book, no vig)
-    d = 1.0 / max(market_prob, 1e-9)
+    """Return (kelly_fraction, decimal_odds) for a bet whose side trades at
+    ``market_prob``. Caller MUST pre-validate ``market_prob`` is inside
+    ``(MIN_EXECUTABLE_PROB, MAX_EXECUTABLE_PROB)`` before calling; this
+    function no longer masks boundary values because doing so fabricated
+    near-infinite decimal odds on closed or rounded markets.
+    """
+    if not (0.0 < market_prob < 1.0):
+        raise ValueError(
+            f"market_prob out of range (0, 1): got {market_prob!r}"
+        )
+    d = 1.0 / market_prob
     b = d - 1.0
-    if b <= 0:
-        return 0.0, d
     f = (p * d - 1.0) / b
     return f, d
+
+
+def _is_executable_side(side_prob: float) -> bool:
+    """True iff the price we'd stake against is within the configured
+    tradeable range. Rejects 0.0 / 1.0 / outside-band as non-executable."""
+    return MIN_EXECUTABLE_PROB <= side_prob <= MAX_EXECUTABLE_PROB
 
 
 def _key(entry: dict) -> tuple:
@@ -189,6 +208,11 @@ def simulate_pnl(
         for _, kind, idx in group:
             if kind != "settle":
                 continue
+            if idx not in open_bets:
+                # Its placement was rejected (e.g. non-executable boundary
+                # price). Nothing to settle. Already recorded as 'rejected'
+                # in the trajectory.
+                continue
             bet_state = open_bets.pop(idx)
             sig, res = paired[idx]
             outcome = int(res["market_prob"] >= 0.5)
@@ -251,6 +275,21 @@ def simulate_pnl(
                 p, m = ai_p, mkt_p
             else:
                 p, m = 1 - ai_p, 1 - mkt_p
+            # Boundary guard: the side we'd stake against must be a
+            # plausibly executable price. 0.0 / 1.0 / sub-1% markets are
+            # treated as non-executable rather than fabricated into
+            # near-infinite decimal odds.
+            if not _is_executable_side(m):
+                traj_rows.append({
+                    "ts": sig["timestamp_utc"],
+                    "event": (
+                        f"rejected {direction} {sig['team']} "
+                        f"({sig['market_type']}) — side_prob={m:.4f} "
+                        f"outside [{MIN_EXECUTABLE_PROB}, {MAX_EXECUTABLE_PROB}]"
+                    ),
+                    "bankroll": round(bankroll, 4),
+                })
+                continue
             f_full, d_odds = _full_kelly(p, m)
             stake_frac = max(0.0, f_full) * kelly_multiplier
             proposed = placement_snapshot * stake_frac

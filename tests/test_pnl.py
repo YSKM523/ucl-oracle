@@ -7,7 +7,10 @@ import math
 import pytest
 
 from backtest.pnl import (
+    MAX_EXECUTABLE_PROB,
+    MIN_EXECUTABLE_PROB,
     _full_kelly,
+    _is_executable_side,
     max_drawdown_pct,
     per_bet_sharpe,
     pnl_summary,
@@ -441,3 +444,88 @@ def test_bet_output_is_in_settlement_order_not_placement_order():
     bets, _ = simulate_pnl(entries, starting_bankroll=100.0)
     assert bets[0].team == "B"   # settled first
     assert bets[1].team == "A"   # settled second
+
+
+# ── regression tests for boundary-price guard (Codex #3) ──────────────
+
+def test_full_kelly_raises_on_zero_market_prob():
+    """Must not silently mask a zero market_prob into fake 1e9-odds."""
+    with pytest.raises(ValueError):
+        _full_kelly(p=0.5, market_prob=0.0)
+
+
+def test_full_kelly_raises_on_one_market_prob():
+    with pytest.raises(ValueError):
+        _full_kelly(p=0.5, market_prob=1.0)
+
+
+def test_executable_side_helper_bounds():
+    assert _is_executable_side(0.5) is True
+    assert _is_executable_side(MIN_EXECUTABLE_PROB) is True
+    assert _is_executable_side(MAX_EXECUTABLE_PROB) is True
+    # Just below / above the configured band
+    assert _is_executable_side(MIN_EXECUTABLE_PROB - 1e-4) is False
+    assert _is_executable_side(MAX_EXECUTABLE_PROB + 1e-4) is False
+    assert _is_executable_side(0.0) is False
+    assert _is_executable_side(1.0) is False
+
+
+def test_sell_signal_on_certainty_market_is_rejected():
+    """YES price = 1.0 → NO side = 0.0 → must be rejected, not turned into
+    1e9-odds payouts that dominate the report."""
+    entries = [
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=0.01,
+             market_prob=1.0, signal="STRONG SELL", edge_pct=-99),
+        _log("2026-04-15T20:00:00Z", "resolution", "A", market_prob=0.0),
+    ]
+    bets, traj = simulate_pnl(entries, starting_bankroll=100.0)
+    assert len(bets) == 0
+    # And the rejection is visible in the trajectory, not silently dropped
+    rejected_rows = [r for r in traj.to_dict("records")
+                     if isinstance(r["event"], str) and "rejected" in r["event"]]
+    assert len(rejected_rows) == 1
+
+
+def test_buy_signal_on_zero_market_prob_is_rejected():
+    """YES price = 0.0 → BUY side = 0.0 → rejected, no fabricated odds."""
+    entries = [
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=0.5,
+             market_prob=0.0, signal="STRONG BUY", edge_pct=50),
+        _log("2026-04-15T20:00:00Z", "resolution", "A", market_prob=1.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0)
+    assert len(bets) == 0
+
+
+def test_thin_market_below_min_threshold_is_rejected():
+    """Sub-1% side prob also rejected (too thin/stale to execute)."""
+    # YES = 0.998, SELL side = 0.002 — below MIN_EXECUTABLE_PROB
+    entries = [
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=0.01,
+             market_prob=0.998, signal="STRONG SELL", edge_pct=-99),
+        _log("2026-04-15T20:00:00Z", "resolution", "A", market_prob=0.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0)
+    assert len(bets) == 0
+
+
+def test_rejection_does_not_consume_bankroll_or_crash_other_bets():
+    """A rejected signal at the same timestamp as a valid one must not
+    affect the valid bet's sizing or the final bankroll."""
+    entries = [
+        # Rejected (boundary)
+        _log("2026-04-14T10:00:00Z", "signal", "REJECT", ai_prob=0.01,
+             market_prob=1.0, signal="STRONG SELL", edge_pct=-99),
+        # Valid
+        _log("2026-04-14T10:00:00Z", "signal", "VALID", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-15T20:00:00Z", "resolution", "REJECT", market_prob=0.0),
+        _log("2026-04-15T20:00:00Z", "resolution", "VALID", market_prob=1.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0,
+                           kelly_multiplier=0.5)
+    assert len(bets) == 1
+    assert bets[0].team == "VALID"
+    # VALID bet sizing unaffected by the REJECT signal existing
+    assert bets[0].stake == pytest.approx(16.67, abs=0.5)
+    assert bets[0].bankroll_after == pytest.approx(125.0, abs=0.5)
