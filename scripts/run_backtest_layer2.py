@@ -34,7 +34,7 @@ def format_report(df: pd.DataFrame, layer1_df: pd.DataFrame | None = None) -> st
     pval = binomial_pvalue(n_correct, n, baseline=0.5)
 
     lines = [
-        "# UCL Oracle Backtest — Layer 2 (Elo + TSFM Ensemble)",
+        "# 2025-26 UEFA Oracle Backtest — Layer 2 (Elo + TSFM Ensemble)",
         "",
         f"**Sample**: {n} knockout ties across seasons "
         f"{df['season'].min()} → {df['season'].max()}",

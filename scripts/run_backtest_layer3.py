@@ -30,7 +30,7 @@ def format_combined_report(df_no_xg: pd.DataFrame, df_with_xg: pd.DataFrame) -> 
     n = len(df_no_xg)
     base = baseline_metrics(df_no_xg)
     lines = [
-        "# UCL Oracle Backtest — Layer 3 (First-leg conditional + xG adjustment)",
+        "# 2025-26 UEFA Oracle Backtest — Layer 3 (First-leg conditional + xG adjustment)",
         "",
         f"**Sample**: {n} two-legged ties across seasons "
         f"{df_no_xg['season'].min()} → {df_no_xg['season'].max()}.",

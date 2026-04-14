@@ -1,4 +1,4 @@
-"""Main orchestrator for UCL Oracle predictions."""
+"""Main orchestrator for 2025-26 UEFA Oracle predictions."""
 
 from __future__ import annotations
 
@@ -440,7 +440,7 @@ if __name__ == "__main__":
 
     import argparse
     parser = argparse.ArgumentParser(
-        description="UCL Oracle Predictions",
+        description="2025-26 UEFA Oracle Predictions",
         epilog=(
             "Default runs the production stack (Elo + first-leg xG + injuries + "
             "Monte Carlo → Polymarket). Add --with-tsfm to additionally run the "

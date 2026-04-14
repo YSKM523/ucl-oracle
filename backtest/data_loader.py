@@ -97,7 +97,7 @@ BACKTEST_API_NAMES: dict[str, str] = {
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 
 _SESSION = requests.Session()
-_SESSION.headers.update({"User-Agent": "ucl-oracle-backtest/1.0"})
+_SESSION.headers.update({"User-Agent": "2025-26-UEFA-oracle-backtest/1.0"})
 
 
 def load_seasons(season_files: list[str] | None = None) -> list[dict]:

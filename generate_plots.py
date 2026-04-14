@@ -1,4 +1,4 @@
-"""Generate all UCL Oracle visualizations.
+"""Generate all 2025-26 UEFA Oracle visualizations.
 
 By default, uses the production Elo-stack (Elo + xG adjustment + injuries).
 Pass ``--with-tsfm`` to additionally run the 3-model TSFM ensemble for the
@@ -27,7 +27,7 @@ from visualization.team_form import plot_team_elo_trajectories, plot_team_foreca
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate UCL Oracle plots")
+    parser = argparse.ArgumentParser(description="Generate 2025-26 UEFA Oracle plots")
     parser.add_argument(
         "--with-tsfm",
         action="store_true",
@@ -38,7 +38,7 @@ def main():
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(message)s")
 
-    print("Generating UCL Oracle plots …\n")
+    print("Generating 2025-26 UEFA Oracle plots …\n")
 
     if args.with_tsfm:
         # Full TSFM ablation run

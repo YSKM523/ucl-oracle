@@ -1,4 +1,4 @@
-"""Central configuration for ucl-oracle."""
+"""Central configuration for 2025-26-UEFA-oracle."""
 
 from pathlib import Path
 

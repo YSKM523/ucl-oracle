@@ -1,4 +1,4 @@
-# UCL Oracle Backtest — Layer 2 (Elo + TSFM Ensemble)
+# 2025-26 UEFA Oracle Backtest — Layer 2 (Elo + TSFM Ensemble)
 
 **Sample**: 83 knockout ties across seasons 2020/2021 → 2024/2025
 

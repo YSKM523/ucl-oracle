@@ -1,4 +1,4 @@
-# UCL Oracle
+# 2025-26 UEFA Oracle
 
 AI predictions for the 2025-26 UEFA Champions League winner, from the quarterfinal stage onwards.
 

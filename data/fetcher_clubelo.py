@@ -22,7 +22,7 @@ from config import (
 log = logging.getLogger(__name__)
 
 _SESSION = requests.Session()
-_SESSION.headers.update({"User-Agent": "ucl-oracle/1.0"})
+_SESSION.headers.update({"User-Agent": "2025-26-UEFA-oracle/1.0"})
 
 CURRENT_ELOS_CACHE = CACHE_DIR / "current_elos.parquet"
 CLUB_HISTORY_DIR = CACHE_DIR / "club_histories"

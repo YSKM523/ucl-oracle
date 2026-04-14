@@ -1,4 +1,4 @@
-"""Run the UCL Oracle backtest on 5 historical seasons (2020-21 to 2024-25).
+"""Run the 2025-26 UEFA Oracle backtest on 5 historical seasons (2020-21 to 2024-25).
 
 Only uses clubelo.com Elo snapshots at each tie's first-leg date — i.e. the
 pure Layer 1 baseline (no TSFM, no xG, no injuries). This establishes the
@@ -39,7 +39,7 @@ def format_report(df: pd.DataFrame) -> str:
     pval = binomial_pvalue(n_correct, n, baseline=0.5)
 
     lines = [
-        "# UCL Oracle Backtest — Layer 1 (Elo baseline)",
+        "# 2025-26 UEFA Oracle Backtest — Layer 1 (Elo baseline)",
         "",
         f"**Sample**: {n} knockout ties across seasons "
         f"{df['season'].min()} → {df['season'].max()}",
