@@ -17,7 +17,7 @@ from config import RESULTS_DIR
 
 LOG_PATH = RESULTS_DIR / "signal_log.jsonl"
 
-Source = Literal["signal", "closing"]
+Source = Literal["signal", "closing", "resolution"]
 
 
 @dataclass
@@ -76,6 +76,41 @@ def append_signal(
         edge_pct=float(edge_pct),
         signal=signal,
         kelly=float(kelly) if kelly is not None else None,
+        event_slug=event_slug,
+        season=season,
+        extras=extras,
+    )
+    append_entry(entry, path)
+    return entry
+
+
+def append_resolution(
+    market_type: str,
+    team: str,
+    outcome: bool,
+    event_slug: str,
+    season: str = "2025-26",
+    extras: dict | None = None,
+    timestamp_utc: str | None = None,
+    path: Path = LOG_PATH,
+) -> "LogEntry":
+    """Record whether this (market, team) actually resolved true (advanced / won).
+
+    ``outcome=True`` → the event we were betting on happened (team advanced /
+    won the tournament). ``market_prob`` is set to ``1.0`` for a resolved
+    positive outcome and ``0.0`` for a resolved negative outcome so existing
+    pairing code can re-use the same field.
+    """
+    entry = LogEntry(
+        timestamp_utc=timestamp_utc or _now_utc(),
+        source="resolution",
+        market_type=market_type,
+        team=team,
+        ai_prob=None,
+        market_prob=1.0 if outcome else 0.0,
+        edge_pct=None,
+        signal=None,
+        kelly=None,
         event_slug=event_slug,
         season=season,
         extras=extras,

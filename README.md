@@ -138,6 +138,43 @@ python scripts/clv_report.py
 
 **Current CLV sample**: N=11 signals logged for 4/14 match day (first data point). Real signal will only emerge after multiple match days × multiple rounds.
 
+## Model vs Market (the Dumb Baseline)
+
+Hit rate > 50% isn't a real skill test against a sharp market. The right dumb baseline is **the market's own closing implied probability**. If our model's Brier score isn't lower than the market's on the same events, we're not adding information over Polymarket.
+
+```
+BSS = 1 − Brier(model) / Brier(market)
+    > 0   → model beats the market baseline
+    = 0   → no skill
+    < 0   → model worse than just copying the market
+```
+
+`backtest/market_benchmark.py` pairs each `(signal, closing, resolution)` triple in the log and computes:
+
+- Brier(model), Brier(market)
+- **Brier Skill Score** (BSS)
+- Per-event win count (how often is the model's squared error smaller)
+- **Paired t-test** on `(market_sq_err − model_sq_err)` — one-sided, H1: model more skilled
+
+**Historical data availability check**: we probed Polymarket Gamma API for closed UCL events 2020-2024 → essentially empty. No free bookmaker snapshot API covers tie-level "advance to semis" markets historically. So the Brier benchmark is **strictly forward-only** for this project: it accumulates one data point per (market_type, team) whenever a match resolves.
+
+**Workflow:**
+
+```bash
+python run_predictions.py --fast                   # signal row
+python scripts/snapshot_closing.py                 # closing row (≤10 min pre-kickoff)
+python scripts/record_outcome.py \
+    --market qf_advance --team Arsenal --advanced  # resolution row after match
+
+python scripts/market_benchmark_report.py          # recomputes BSS + t-test
+```
+
+Report lands in `results/market_benchmark.md` and `results/market_benchmark.csv`.
+
+**Current sample: 0 resolved events.** First data points arrive after QF second legs resolve (Apr 14-15, 2026). After the full remaining UCL (QF 2nd legs + SF + Final) we'll have ~10-15 (qf_advance) + 1 (winner) data points — still small but the framework will scale across future competitions.
+
+**Until BSS > 0 is demonstrated, no "beats the market" claim is made.**
+
 **Honest scoreboard:**
 
 | Claim | Status |
@@ -145,6 +182,7 @@ python scripts/clv_report.py
 | Model predicts which team advances more often than a coin flip | ✅ 63.9%, p=0.0058 |
 | Model beats naive "pick Elo favorite" baseline | ⚠️ +1.9pp, within noise |
 | Model exhibits closing-line value vs Polymarket | 🟡 Framework built, N=11 so far |
+| Model Brier < Polymarket closing Brier (BSS > 0) | 🟡 Framework built, 0 resolved events |
 | Model-signalled BUY edges yield positive ROI at Kelly sizing | 🟡 Pending 30+ signals + match resolutions |
 
 ## Hyperparameter Provenance & Out-of-Sample Integrity
