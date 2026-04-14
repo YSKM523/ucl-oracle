@@ -175,6 +175,43 @@ Report lands in `results/market_benchmark.md` and `results/market_benchmark.csv`
 
 **Until BSS > 0 is demonstrated, no "beats the market" claim is made.**
 
+## Half-Kelly PnL Simulation
+
+Accuracy and calibration metrics don't tell you whether you'd make money. The industry-standard capital-at-risk test is **Half-Kelly staking with bankroll tracking**.
+
+```
+# full Kelly:        f = (p · d − 1) / (d − 1)   where d = 1/market_prob
+# Half-Kelly stake:  bankroll × max(f, 0) × 0.5
+```
+
+For every `(signal, closing, resolution)` triple in the log, `backtest/pnl.py` walks the events in time order, sizes each bet by Half-Kelly on the signal-time market price, and tracks the bankroll forward. Metrics:
+
+- **Bets placed**, **total staked**, **final bankroll**
+- **ROI** (on bankroll) and **return on turnover** (on staked)
+- **Max drawdown %** across the trajectory
+- **Per-bet Sharpe** (mean / std of `PnL / stake` across bets)
+- **Win rate** — direction-aware (a successful SELL counts as a win)
+
+**Why forward-only, again**: staking is meaningless without a real bookmaker price to stake against. Historical UCL tie-advancement markets aren't preserved by Polymarket or reachable via any free API, so the PnL simulator only consumes events whose (signal, closing, resolution) triple is fully populated — i.e. things that resolve going forward.
+
+**Workflow:**
+
+```bash
+python run_predictions.py                      # signal row
+python scripts/snapshot_closing.py             # closing row (pre-kickoff)
+python scripts/record_outcome.py \
+    --market qf_advance --team Arsenal \
+    --advanced                                 # resolution row
+
+python scripts/pnl_report.py                   # → results/pnl_report.md
+python scripts/pnl_report.py --kelly 0.25      # quarter-Kelly variant
+python scripts/pnl_report.py --min-edge 5      # stricter signal filter
+```
+
+**Current sample: 0 bets.** The forward test begins when tonight's QF second legs resolve. Expected sample by the time the final plays (May 30): ~10-14 Kelly-eligible bets (plus 1 winner-market bet that resolves once). That's still too small for meaningful Sharpe, but the trajectory is trackable and the framework extends trivially to the next competition.
+
+**No ROI claim** is made until at least 30 resolved bets are in the log.
+
 **Honest scoreboard:**
 
 | Claim | Status |
@@ -183,7 +220,8 @@ Report lands in `results/market_benchmark.md` and `results/market_benchmark.csv`
 | Model beats naive "pick Elo favorite" baseline | ⚠️ +1.9pp, within noise |
 | Model exhibits closing-line value vs Polymarket | 🟡 Framework built, N=11 so far |
 | Model Brier < Polymarket closing Brier (BSS > 0) | 🟡 Framework built, 0 resolved events |
-| Model-signalled BUY edges yield positive ROI at Kelly sizing | 🟡 Pending 30+ signals + match resolutions |
+| Half-Kelly staking ROI > 0 with tolerable drawdown | 🟡 Framework built, 0 resolved bets |
+| Per-bet Sharpe > 0 over 30+ resolved bets | 🟡 Pending first 30 resolutions |
 
 ## Hyperparameter Provenance & Out-of-Sample Integrity
 
