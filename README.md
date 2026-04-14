@@ -105,6 +105,48 @@ Pulled live from FotMob per-team endpoints. Each injured player contributes
 
 **Why the signal is so lopsided toward Arsenal**: the doubtful list includes Saka, Ødegaard, Timber, Calafiori, and Merino — five of their top six starters. Even conservatively weighting "Doubtful" at 0.5, that's cumulative -46.5 Elo, nearly the per-team cap.
 
+## Closing Line Value (CLV) Tracking — The Real Edge Test
+
+Hit rate is a suggestive metric but not the industry standard for proving edge against a sharp market. Historically, **~62% of UCL knockout ties are won by the pre-match favorite** — the model's 63.9% hit rate (Wilson 95% CI [53.1%, 73.4%]) is barely distinguishable from naive favorite-picking within the available sample.
+
+The gold standard is **CLV**: every time we emit a BUY/SELL signal, record the market price at signal time; fetch the final pre-kickoff price; measure whether the market moved in our direction.
+
+```
+CLV_pp(BUY)  = closing_prob - entry_prob     # positive = alpha
+CLV_pp(SELL) = entry_prob - closing_prob     # positive = alpha
+```
+
+Under an efficient market CLV is mean-zero. A persistently positive mean CLV over 30+ signals with p < 0.05 is what pros actually stake a claim on.
+
+**Workflow (forward test in progress):**
+
+```bash
+# After every prediction run, signals append to results/signal_log.jsonl:
+python run_predictions.py --fast
+
+# ≤10 min before kickoff, capture the closing line:
+python scripts/snapshot_closing.py
+
+# Any time, aggregate the full log:
+python scripts/clv_report.py
+```
+
+- **`markets/signal_log.py`** — append-only JSONL log of every BUY/SELL signal + closing-line snapshot; safe under interrupts
+- **`scripts/snapshot_closing.py`** — reads logged signals, pulls current Polymarket, appends matching closings
+- **`backtest/clv.py`** — pairs signals ↔ closings, computes mean CLV, SD, t-statistic, one-sided p-value, plus per-direction and per-strength breakdowns
+- **`scripts/clv_report.py`** — generates `results/clv_report.md` and `results/clv_report.csv`
+
+**Current CLV sample**: N=11 signals logged for 4/14 match day (first data point). Real signal will only emerge after multiple match days × multiple rounds.
+
+**Honest scoreboard:**
+
+| Claim | Status |
+|-------|--------|
+| Model predicts which team advances more often than a coin flip | ✅ 63.9%, p=0.0058 |
+| Model beats naive "pick Elo favorite" baseline | ⚠️ +1.9pp, within noise |
+| Model exhibits closing-line value vs Polymarket | 🟡 Framework built, N=11 so far |
+| Model-signalled BUY edges yield positive ROI at Kelly sizing | 🟡 Pending 30+ signals + match resolutions |
+
 ## Backtest Results (5 seasons, 2020-21 → 2024-25)
 
 **Layer 1 baseline: pure Elo at tie date** — no TSFM, no xG, no injuries. Sampled 83 knockout ties from clubelo.com historical API at each tie's first-leg date. See [backtest/results/layer1_elo_baseline.md](backtest/results/layer1_elo_baseline.md) for the full report.

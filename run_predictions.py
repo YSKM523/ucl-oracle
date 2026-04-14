@@ -19,11 +19,14 @@ from config import (
     MONTE_CARLO_SIMULATIONS,
     RESULTS_DIR,
     UCL_TEAMS,
+    UCL_WINNER_EVENT_SLUG,
+    UCL_SEMIS_EVENT_SLUG,
 )
 from data.fetcher_clubelo import fetch_current_elos
 from data.fetcher_injuries import fetch_all_injuries
 from data.fetcher_xg import fetch_first_leg_xg
 from markets.edge_detector import detect_edges, format_edge_report, kelly_fraction
+from markets.signal_log import append_signal
 from prediction.elo_adjuster import (
     adjust_elos_for_first_legs,
     apply_injury_penalties,
@@ -34,6 +37,40 @@ from prediction.elo_adjuster import (
 from prediction.knockout_simulator import run_monte_carlo
 
 log = logging.getLogger(__name__)
+
+
+def _log_edges(edges_df: pd.DataFrame, market_type: str, event_slug: str) -> None:
+    """Append every actionable edge row to the CLV signal log."""
+    logged = 0
+    for _, row in edges_df.iterrows():
+        signal = row.get("strength") or ""
+        # detect_edges stores a coarse "edge"/"STRONG EDGE" tag; recover the
+        # direction + strength the user sees in the tables
+        direction = row.get("direction")
+        if not direction:
+            continue
+        if signal == "STRONG EDGE":
+            label = f"STRONG {direction}"
+        elif signal == "edge":
+            label = direction
+        else:
+            label = direction
+        try:
+            append_signal(
+                market_type=market_type,
+                team=row["team"],
+                ai_prob=row["ai_prob"],
+                market_prob=row["market_prob"],
+                edge_pct=row["edge_pct"],
+                signal=label,
+                kelly=row.get("half_kelly"),
+                event_slug=event_slug,
+            )
+            logged += 1
+        except Exception as exc:
+            log.warning("Signal log append failed for %s: %s", row.get("team"), exc)
+    if logged:
+        print(f"  ▸ Logged {logged} signals to results/signal_log.jsonl (for CLV tracking)")
 
 
 def run_elo_baseline() -> tuple[pd.DataFrame, dict[str, float]]:
@@ -146,6 +183,8 @@ def run_polymarket_comparison(
             print(f"\n--- WINNER MARKET EDGES ---")
             print(format_edge_report(edges))
             edges.to_csv(RESULTS_DIR / "edges" / "winner_edges.csv", index=False)
+            # Append every actionable edge to the CLV signal log
+            _log_edges(edges, market_type="winner", event_slug=UCL_WINNER_EVENT_SLUG)
     else:
         print("\n  UCL winner market: not found on Polymarket")
 
@@ -181,6 +220,7 @@ def run_polymarket_comparison(
             print(f"\n--- QF ADVANCEMENT EDGES ---")
             print(format_edge_report(adv_edges))
             adv_edges.to_csv(RESULTS_DIR / "edges" / "qf_advance_edges.csv", index=False)
+            _log_edges(adv_edges, market_type="qf_advance", event_slug=UCL_SEMIS_EVENT_SLUG)
     else:
         print("\n  QF advancement market: not found on Polymarket")
 
