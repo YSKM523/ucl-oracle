@@ -147,6 +147,61 @@ python scripts/clv_report.py
 | Model exhibits closing-line value vs Polymarket | 🟡 Framework built, N=11 so far |
 | Model-signalled BUY edges yield positive ROI at Kelly sizing | 🟡 Pending 30+ signals + match resolutions |
 
+## Hyperparameter Provenance & Out-of-Sample Integrity
+
+A fair critique of any "my model got 63.9%!" claim is: were the knobs tuned on the same seasons you evaluated on? Here's the honest breakdown for every parameter that enters the predictions.
+
+### Layer 1 (the 63.9% backtest result)
+
+Only these values enter the 83-tie hit rate. **None were fit on any season's results**; all come from public soccer-analytics literature or are structural constants of the tournament rules:
+
+| Parameter | Value | Source | Touches 63.9%? |
+|-----------|-------|--------|----------------|
+| `POISSON_AVG_GOALS` | 2.7 | UCL KO historical average | ✅ yes |
+| `UCL_HOME_ADVANTAGE_ELO` | 65 | Club football standard (Dixon-Coles et al.) | ✅ yes |
+| `KNOCKOUT_PENALTY_ADVANTAGE` | 0.55 | Mild nudge to stronger side on pens | ✅ yes |
+| `BRADLEY_TERRY_DRAW_NU` | 0.28 | Standard BT draw parameter | ⚪ only one-leg finals |
+| `ET_GOAL_FRACTION` | 0.33 | 30 min / 90 min by construction | ⚪ only ties that go to ET |
+| `MONTE_CARLO_SIMULATIONS` | 50k | Convergence, not tunable | ⚪ noise floor |
+| Elo values | — | Fetched fresh from clubelo.com per tie date | ✅ yes |
+
+Conclusion: Layer 1's 63.9% has no fit parameter. **Each per-season hit rate already is out-of-sample**, because nothing was trained on any of the other seasons either.
+
+### Layer 1 sensitivity sweep
+
+To prove the 63.9% isn't knife-edge, we perturb the three constants that DO enter the MC simulation across wide grids. See [backtest/results/sensitivity_sweep.md](backtest/results/sensitivity_sweep.md).
+
+| Parameter | Grid | Hit-rate spread |
+|-----------|------|-----------------|
+| `POISSON_AVG_GOALS` | 2.3 → 3.1 | **0.0 pp** (symmetric scaling doesn't affect winners) |
+| `UCL_HOME_ADVANTAGE_ELO` | 30 → 100 | **4.8 pp** (only drops at 30, which no one uses; stable 50-100) |
+| `KNOCKOUT_PENALTY_ADVANTAGE` | 0.50 → 0.60 | **0.0 pp** (few ties go to pens) |
+
+The model is not perched on a particular parameter value.
+
+### Layer 3+ (xG adjustment, injury penalties) — UNVALIDATED
+
+These parameters **are guessed from priors**, and have never been compared against backtest data because historical xG and historical injury lists aren't accessible (see Layer 3 section below). If a future data source enables Layer 3 backtesting, these **MUST be evaluated by LOSO** — the framework for that is built in `backtest/loso.py`.
+
+| Parameter | Current value | How it was chosen | Status |
+|-----------|---------------|-------------------|--------|
+| `XG_BLEND_ALPHA` (α) | 0.6 | xG is ~60% predictive of future goals, per analytics consensus | 🟡 prior, untested |
+| `FIRST_LEG_ELO_K` (K) | 10 | Classical Elo update magnitude (K in [10, 32]) | 🟡 prior, untested |
+| `FIRST_LEG_RESIDUAL_CAP` | ±2.5 | Anti-blowout heuristic | 🟡 prior, untested |
+| `INJURY_TIERS` (€80M→-30, etc.) | 4 buckets | My own tiering, inspired by transfer-value analytics | 🟠 free parameters |
+| `INJURY_RETURN_WEIGHTS` ("Doubtful"=0.5, …) | 12 buckets | Also my own | 🟠 free parameters |
+| `INJURY_TOTAL_CAP` | -60 Elo | Cap to prevent outliers dominating | 🟠 free parameter |
+
+**Forward test commitment**: signals emitted with these parameters will be CLV-tracked against Polymarket closings (see previous section). If mean CLV stays ≤ 0 over 30+ signals, the xG/injury hypers aren't helping, regardless of how reasonable they seemed.
+
+### LOSO framework for future signals
+
+`backtest/loso.py` implements `run_loso(seasons_payload, predictor, tuner)`:
+
+- For each season in turn, it holds the season out, calls `tuner(other_seasons_ties)` to fit hyperparameters, then evaluates `predictor(held_out_ties, tuned_hypers)` on the held-out season only.
+- Reports per-fold and pooled (micro-averaged) hit rate / Brier / log loss.
+- For Layer 1 the `tuner` is a no-op (`{}`), so LOSO trivially reduces to per-season stats — but the framework is in place for any future signal that has learnable knobs.
+
 ## Backtest Results (5 seasons, 2020-21 → 2024-25)
 
 **Layer 1 baseline: pure Elo at tie date** — no TSFM, no xG, no injuries. Sampled 83 knockout ties from clubelo.com historical API at each tie's first-leg date. See [backtest/results/layer1_elo_baseline.md](backtest/results/layer1_elo_baseline.md) for the full report.
