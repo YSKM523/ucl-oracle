@@ -124,25 +124,39 @@ def plot_edge_bars(
 
     df = edges_df.sort_values("edge_pct", ascending=True)
 
-    fig, ax = plt.subplots(figsize=(10, max(4, len(df) * 0.8)))
+    fig, ax = plt.subplots(figsize=(11, max(4, len(df) * 0.8)))
 
     colors = ["#2e7d32" if e > 0 else "#c62828" for e in df["edge_pct"]]
-    bars = ax.barh(df["team"], df["edge_pct"], color=colors, edgecolor="#333", linewidth=0.5)
+    bars = ax.barh(df["team"], df["edge_pct"], color=colors,
+                   edgecolor="#333", linewidth=0.5)
+
+    max_abs = max(df["edge_pct"].abs().max(), 1.0)
+    pad = max_abs * 0.06
 
     for bar, (_, row) in zip(bars, df.iterrows()):
         w = bar.get_width()
-        offset = 0.5 if w >= 0 else -0.5
-        ha = "left" if w >= 0 else "right"
         label = f"{row['edge_pct']:+.1f}%"
         if row["strength"] == "STRONG EDGE":
             label += " ★"
-        ax.text(w + offset, bar.get_y() + bar.get_height()/2,
-                label, va="center", ha=ha, fontsize=10, fontweight="bold")
+        # Always place the numeric label just BEYOND the bar's tip,
+        # on the same side as the bar's direction. Never overlaps the
+        # team-name axis label, which lives on the other side of zero.
+        if w >= 0:
+            ax.text(w + pad, bar.get_y() + bar.get_height() / 2,
+                    label, va="center", ha="left",
+                    fontsize=10, fontweight="bold", color="#1b5e20")
+        else:
+            ax.text(w - pad, bar.get_y() + bar.get_height() / 2,
+                    label, va="center", ha="right",
+                    fontsize=10, fontweight="bold", color="#b71c1c")
 
-    ax.axvline(0, color="black", linewidth=0.5)
+    # Expand x-axis so labels always fit
+    ax.set_xlim(-max_abs * 1.35, max_abs * 1.35)
+    ax.axvline(0, color="black", linewidth=0.8)
     ax.set_xlabel("Edge (percentage points)", fontsize=12)
     ax.set_title(title, fontsize=13, fontweight="bold")
     ax.grid(axis="x", alpha=0.3)
+    ax.tick_params(axis="y", labelsize=11)
 
     plt.tight_layout()
     fig.savefig(save_path, dpi=150, bbox_inches="tight", facecolor="white")
