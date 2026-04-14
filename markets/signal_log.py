@@ -13,11 +13,31 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, Literal
 
-from config import RESULTS_DIR
+from config import (
+    RESULTS_DIR,
+    UCL_SEMIS_EVENT_SLUG,
+    UCL_WINNER_EVENT_SLUG,
+)
 
 LOG_PATH = RESULTS_DIR / "signal_log.jsonl"
 
 Source = Literal["signal", "closing", "resolution"]
+
+# Canonical per-market event slugs used by pairing logic downstream. Entries
+# logged with None / "auto" / empty get normalised to these so that signals,
+# closings, and resolutions for the same market always live under the same
+# compound key ``(market_type, team, season, event_slug)``.
+CANONICAL_EVENT_SLUGS: dict[str, str] = {
+    "winner": UCL_WINNER_EVENT_SLUG,
+    "qf_advance": UCL_SEMIS_EVENT_SLUG,
+}
+
+
+def canonical_event_slug(market_type: str, slug: str | None) -> str:
+    """Normalise a caller-supplied slug for use as part of the pairing key."""
+    if slug and slug not in {"auto", ""}:
+        return slug
+    return CANONICAL_EVENT_SLUGS.get(market_type, slug or "")
 
 
 @dataclass
@@ -76,7 +96,7 @@ def append_signal(
         edge_pct=float(edge_pct),
         signal=signal,
         kelly=float(kelly) if kelly is not None else None,
-        event_slug=event_slug,
+        event_slug=canonical_event_slug(market_type, event_slug),
         season=season,
         extras=extras,
     )
@@ -111,7 +131,7 @@ def append_resolution(
         edge_pct=None,
         signal=None,
         kelly=None,
-        event_slug=event_slug,
+        event_slug=canonical_event_slug(market_type, event_slug),
         season=season,
         extras=extras,
     )
@@ -139,7 +159,7 @@ def append_closing(
         edge_pct=None,
         signal=None,
         kelly=None,
-        event_slug=event_slug,
+        event_slug=canonical_event_slug(market_type, event_slug),
         season=season,
         extras=extras,
     )

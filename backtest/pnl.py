@@ -22,7 +22,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from markets.signal_log import filter_entries, read_all
+from markets.signal_log import canonical_event_slug, filter_entries, read_all
 
 
 @dataclass
@@ -54,31 +54,74 @@ def _full_kelly(p: float, market_prob: float) -> tuple[float, float]:
     return f, d
 
 
+def _key(entry: dict) -> tuple:
+    """Compound pairing key: (market_type, team, season, canonical event_slug)."""
+    return (
+        entry["market_type"],
+        entry["team"],
+        entry["season"],
+        canonical_event_slug(entry["market_type"], entry.get("event_slug")),
+    )
+
+
+def _index_by_key_sorted(
+    entries: list[dict], source: str,
+) -> dict[tuple, list[dict]]:
+    """All entries of one source, grouped by _key, each list sorted by timestamp."""
+    out: dict[tuple, list[dict]] = {}
+    for e in filter_entries(entries, source=source):
+        out.setdefault(_key(e), []).append(e)
+    for k in out:
+        out[k].sort(key=lambda r: r["timestamp_utc"])
+    return out
+
+
+def _first_after(
+    rows: list[dict], after_ts: str,
+    before_ts: str | None = None,
+) -> dict | None:
+    """First row whose timestamp is strictly after ``after_ts`` (and strictly
+    before ``before_ts`` if given). Input list must already be timestamp-sorted."""
+    for r in rows:
+        if r["timestamp_utc"] <= after_ts:
+            continue
+        if before_ts is not None and r["timestamp_utc"] >= before_ts:
+            return None
+        return r
+    return None
+
+
 def simulate_pnl(
     entries: list[dict] | None = None,
     starting_bankroll: float = 100.0,
     kelly_multiplier: float = 0.5,
     min_edge_pct: float = 3.0,
     require_resolution: bool = True,
+    require_closing: bool = False,
 ) -> tuple[list[Bet], pd.DataFrame]:
     """Walk the signal log in time order, placing Half-Kelly bets.
 
-    Returns (list_of_bet_records, bankroll_trajectory_df).
+    Pairing invariants (enforced to eliminate look-ahead / stale-match contamination):
+      • Resolutions and signals must share the full 4-tuple key
+        ``(market_type, team, season, canonical_event_slug)``. A different
+        ``event_slug`` for the same team in the same season — e.g. a repeat
+        opponent in a later round — is no longer conflated.
+      • A signal is paired with the EARLIEST resolution that is timestamped
+        strictly after the signal. Post-resolution signals (logged after a
+        result is already recorded) are skipped, not silently back-dated.
+      • When ``require_closing=True``, a closing row must also exist with
+        ``signal.ts < closing.ts < resolution.ts`` — i.e. the report only
+        recognises a fully-ordered triple.
+
+    Returns ``(list_of_bet_records, bankroll_trajectory_df)``.
     """
     if entries is None:
         entries = read_all()
 
-    # Pair each signal with the latest closing (for decimal-odds context only)
-    # and latest resolution for that (market_type, team, season) key.
-    def latest_by(source: str) -> dict[tuple, dict]:
-        out: dict[tuple, dict] = {}
-        for e in filter_entries(entries, source=source):
-            k = (e["market_type"], e["team"], e["season"])
-            if k not in out or e["timestamp_utc"] > out[k]["timestamp_utc"]:
-                out[k] = e
-        return out
-
-    resolutions = latest_by("resolution")
+    resolutions_by_key = _index_by_key_sorted(entries, source="resolution")
+    closings_by_key = (
+        _index_by_key_sorted(entries, source="closing") if require_closing else {}
+    )
 
     # All signals that cross the min-edge threshold, chronological
     signals = [
@@ -97,10 +140,26 @@ def simulate_pnl(
     }] if signals else []
 
     for sig in signals:
-        key = (sig["market_type"], sig["team"], sig["season"])
-        if require_resolution and key not in resolutions:
+        key = _key(sig)
+        res_candidates = resolutions_by_key.get(key, [])
+        res = _first_after(res_candidates, sig["timestamp_utc"])
+
+        if require_resolution and res is None:
+            # Either no resolution at all, or only pre-signal resolutions exist.
+            # Skipping both cases prevents look-ahead contamination.
             continue
-        res = resolutions.get(key)
+
+        if require_closing:
+            clos_candidates = closings_by_key.get(key, [])
+            # Require a closing strictly between the signal and the resolution
+            clos = _first_after(
+                clos_candidates,
+                sig["timestamp_utc"],
+                before_ts=res["timestamp_utc"] if res is not None else None,
+            )
+            if clos is None:
+                continue
+
         outcome = int(res["market_prob"] >= 0.5) if res is not None else 0
 
         ai_p = sig["ai_prob"]

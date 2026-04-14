@@ -39,7 +39,9 @@ def main() -> None:
     out.add_argument("--eliminated", "--no", dest="outcome",
                      action="store_const", const=False)
     ap.add_argument("--season", default="2025-26")
-    ap.add_argument("--event-slug", default="auto")
+    # Omit --event-slug to use the canonical per-market slug from config;
+    # override only if a market uses a non-standard Polymarket slug.
+    ap.add_argument("--event-slug", default=None)
     args = ap.parse_args()
 
     entry = append_resolution(

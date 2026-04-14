@@ -191,3 +191,114 @@ def test_simulate_chronological_order():
     bets, _ = simulate_pnl(entries, starting_bankroll=100.0)
     assert bets[0].team == "A"   # earlier ts
     assert bets[1].team == "B"
+
+
+# ── regression tests for Codex-flagged pairing defects ─────────────────
+
+def test_signal_logged_after_resolution_is_skipped():
+    """A signal whose timestamp is AFTER an existing resolution must not be
+    scored against that resolution — otherwise PnL sees known outcomes."""
+    entries = [
+        # Resolution lands first …
+        _log("2026-04-14T20:00:00Z", "resolution", "A", market_prob=1.0),
+        # … signal appears AFTER, with the same key. This is contamination.
+        _log("2026-04-15T09:00:00Z", "signal", "A", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0)
+    assert len(bets) == 0
+
+
+def test_earliest_post_signal_resolution_is_used():
+    """Two resolutions for the same key — one before the signal, one after.
+    Only the post-signal resolution may pair; pre-signal is silently stale."""
+    entries = [
+        _log("2026-04-14T10:00:00Z", "resolution", "A", market_prob=0.0,
+             ts_override="2026-04-14T10:00:00Z"),  # pre-signal, stale
+        _log("2026-04-14T11:00:00Z", "signal", "A", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-14T20:00:00Z", "resolution", "A", market_prob=1.0),  # valid
+    ] if False else [
+        _log("2026-04-14T10:00:00Z", "resolution", "A", market_prob=0.0),
+        _log("2026-04-14T11:00:00Z", "signal", "A", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-14T20:00:00Z", "resolution", "A", market_prob=1.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0)
+    assert len(bets) == 1
+    # Outcome must be 1 (from the 20:00 resolution), not 0 (the stale one)
+    assert bets[0].outcome == 1
+    assert bets[0].bet_wins is True
+
+
+def test_different_event_slug_prevents_cross_contamination():
+    """A signal and resolution for the same (market, team, season) but
+    different event_slug must NOT be paired — e.g. separate real-world markets."""
+    entries = [
+        # Signal for Market A's event
+        {**_log("2026-04-14T10:00:00Z", "signal", "Arsenal", ai_prob=0.6,
+                market_prob=0.4, signal="BUY", edge_pct=20,
+                market="qf_advance"),
+         "event_slug": "event-1"},
+        # Resolution for a DIFFERENT event_slug
+        {**_log("2026-04-15T20:00:00Z", "resolution", "Arsenal",
+                market_prob=1.0, market="qf_advance"),
+         "event_slug": "event-2"},
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0)
+    assert len(bets) == 0
+
+
+def test_same_event_slug_via_canonical_normalization_pairs_correctly():
+    """A resolution logged with None event_slug must normalize to the same
+    canonical slug as a signal logged with the explicit canonical value."""
+    # Signal uses the canonical winner event_slug string.
+    from config import UCL_WINNER_EVENT_SLUG
+    entries = [
+        {**_log("2026-04-14T10:00:00Z", "signal", "Arsenal", ai_prob=0.6,
+                market_prob=0.4, signal="BUY", edge_pct=20, market="winner"),
+         "event_slug": UCL_WINNER_EVENT_SLUG},
+        # Resolution with event_slug=None — normalises to the same canonical.
+        {**_log("2026-05-30T22:00:00Z", "resolution", "Arsenal",
+                market_prob=1.0, market="winner"),
+         "event_slug": None},
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0)
+    assert len(bets) == 1
+    assert bets[0].outcome == 1
+
+
+def test_require_closing_enforces_ordered_triple():
+    """With require_closing=True, a bet is only recognised if signal < closing
+    < resolution all hold. A closing that pre-dates the signal is rejected."""
+    entries = [
+        # Closing pre-dates signal — fails ordering invariant
+        _log("2026-04-13T10:00:00Z", "closing", "A", market_prob=0.40),
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-15T20:00:00Z", "resolution", "A", market_prob=1.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0,
+                           require_closing=True)
+    assert len(bets) == 0
+
+    # Add a correctly-ordered closing → bet must now materialise
+    entries.append(
+        _log("2026-04-14T19:00:00Z", "closing", "A", market_prob=0.45),
+    )
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0,
+                           require_closing=True)
+    assert len(bets) == 1
+
+
+def test_same_timestamp_resolution_does_not_pair():
+    """A resolution timestamped EXACTLY when the signal was placed is NOT
+    strictly after the signal and therefore does not satisfy the pairing
+    invariant — avoids hairline look-ahead at wall-clock resolution."""
+    entries = [
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-14T10:00:00Z", "resolution", "A", market_prob=1.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0)
+    assert len(bets) == 0

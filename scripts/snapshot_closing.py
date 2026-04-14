@@ -73,11 +73,14 @@ def main() -> None:
             missing += 1
             continue
         extras = {"label": args.label} if args.label else None
+        # Leave event_slug=None so signal_log.canonical_event_slug() picks
+        # the canonical per-market slug; keeps the pairing key consistent
+        # with the corresponding signal and resolution rows.
         append_closing(
             market_type=market_type,
             team=team,
             market_prob=float(price),
-            event_slug="auto",       # not used for CLV pairing
+            event_slug=None,
             season=season,
             extras=extras,
         )
