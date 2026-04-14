@@ -77,12 +77,13 @@ def main() -> None:
     else:
         df = bets_to_dataframe(bets)
         lines += [
-            "## Every bet",
+            "## Every bet (ordered by settlement time)",
             "",
             df[[
-                "ts_signal", "market_type", "team", "direction", "entry_prob",
-                "ai_prob", "kelly_fraction", "stake", "decimal_odds", "outcome",
-                "bet_wins", "pnl", "bankroll_after",
+                "ts_signal", "ts_resolution", "market_type", "team", "direction",
+                "entry_prob", "ai_prob", "kelly_fraction", "stake", "decimal_odds",
+                "outcome", "bet_wins", "pnl", "bankroll_at_placement",
+                "bankroll_after",
             ]].to_markdown(index=False),
             "",
             "## Bankroll trajectory",

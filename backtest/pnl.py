@@ -28,6 +28,7 @@ from markets.signal_log import canonical_event_slug, filter_entries, read_all
 @dataclass
 class Bet:
     ts_signal: str
+    ts_resolution: str           # when PnL actually lands
     market_type: str
     team: str
     season: str
@@ -35,12 +36,13 @@ class Bet:
     entry_prob: float            # market implied prob at signal time
     ai_prob: float
     kelly_fraction: float        # full-Kelly stake fraction (may be negative)
-    stake: float                 # actual stake in bankroll units
+    stake: float                 # stake committed at placement (after scaling)
     decimal_odds: float
     outcome: int                 # 1 = event happened, 0 = event didn't
     bet_wins: bool               # whether THIS bet pays out (direction-aware)
     pnl: float                   # stake-weighted PnL for this bet
-    bankroll_after: float
+    bankroll_at_placement: float # bankroll when bet was sized (no peek)
+    bankroll_after: float        # bankroll after this bet settles
 
 
 def _full_kelly(p: float, market_prob: float) -> tuple[float, float]:
@@ -131,87 +133,169 @@ def simulate_pnl(
     ]
     signals.sort(key=lambda e: e["timestamp_utc"])
 
-    bankroll = starting_bankroll
-    bets: list[Bet] = []
-    traj_rows: list[dict] = [{
-        "ts": signals[0]["timestamp_utc"] if signals else None,
-        "event": "start",
-        "bankroll": bankroll,
-    }] if signals else []
-
+    # ── Pair each eligible signal with its resolution ──────────────────
+    # Skip signals that violate the pairing invariants (post-resolution,
+    # closing out of order, no resolution yet).
+    paired: list[tuple[dict, dict]] = []
     for sig in signals:
         key = _key(sig)
-        res_candidates = resolutions_by_key.get(key, [])
-        res = _first_after(res_candidates, sig["timestamp_utc"])
-
+        res = _first_after(resolutions_by_key.get(key, []), sig["timestamp_utc"])
         if require_resolution and res is None:
-            # Either no resolution at all, or only pre-signal resolutions exist.
-            # Skipping both cases prevents look-ahead contamination.
             continue
-
+        if res is None:
+            # require_resolution=False + no res → can't simulate a bet
+            continue
         if require_closing:
-            clos_candidates = closings_by_key.get(key, [])
-            # Require a closing strictly between the signal and the resolution
             clos = _first_after(
-                clos_candidates,
+                closings_by_key.get(key, []),
                 sig["timestamp_utc"],
-                before_ts=res["timestamp_utc"] if res is not None else None,
+                before_ts=res["timestamp_utc"],
             )
             if clos is None:
                 continue
+        paired.append((sig, res))
 
-        outcome = int(res["market_prob"] >= 0.5) if res is not None else 0
+    # ── Build a merged placement / settlement event timeline ──────────
+    # kind ordering at same timestamp: settlements first (free bankroll
+    # before sizing new placements), then placements. Stable secondary
+    # ordering by paired-list index keeps behaviour deterministic.
+    kind_order = {"settle": 0, "place": 1}
+    events: list[tuple[str, str, int]] = []
+    for idx, (sig, res) in enumerate(paired):
+        events.append((sig["timestamp_utc"], "place", idx))
+        events.append((res["timestamp_utc"], "settle", idx))
+    events.sort(key=lambda e: (e[0], kind_order[e[1]], e[2]))
 
-        ai_p = sig["ai_prob"]
-        mkt_p = sig["market_prob"]
-        direction = "BUY" if "BUY" in sig["signal"].upper() else "SELL"
+    bankroll = starting_bankroll
+    open_bets: dict[int, dict] = {}       # idx → {stake, direction, decimal_odds, …}
+    settled_bets: list[Bet] = []          # completed, in settlement order
+    traj_rows: list[dict] = [{
+        "ts": events[0][0] if events else None,
+        "event": "start", "bankroll": bankroll,
+    }] if events else []
 
-        if direction == "BUY":
-            p, m = ai_p, mkt_p
-            bet_wins = outcome == 1
-        else:
-            # Betting on "NO": our prob of NO = 1-ai_p, market NO = 1-mkt_p
-            p, m = 1 - ai_p, 1 - mkt_p
-            bet_wins = outcome == 0
+    # Walk the timeline in (ts, kind) groups so same-timestamp events
+    # resolve collectively: settle everything first, snapshot bankroll,
+    # size all placements off that single snapshot.
+    i = 0
+    while i < len(events):
+        ts = events[i][0]
+        group = []
+        while i < len(events) and events[i][0] == ts:
+            group.append(events[i])
+            i += 1
 
-        f_full, d_odds = _full_kelly(p, m)
-        stake_frac = max(0.0, f_full) * kelly_multiplier
-        stake = bankroll * stake_frac
-
-        if stake <= 0:
-            continue
-
-        if bet_wins:
-            pnl = stake * (d_odds - 1.0)
-        else:
-            pnl = -stake
-
-        bankroll += pnl
-        bets.append(
-            Bet(
-                ts_signal=sig["timestamp_utc"],
-                market_type=sig["market_type"],
-                team=sig["team"],
-                season=sig["season"],
-                direction=direction,
-                entry_prob=mkt_p,
-                ai_prob=ai_p,
-                kelly_fraction=round(f_full, 4),
-                stake=round(stake, 4),
-                decimal_odds=round(d_odds, 4),
-                outcome=outcome,
-                bet_wins=bet_wins,
-                pnl=round(pnl, 4),
-                bankroll_after=round(bankroll, 4),
+        # 1) Process all settlements at this timestamp first.
+        for _, kind, idx in group:
+            if kind != "settle":
+                continue
+            bet_state = open_bets.pop(idx)
+            sig, res = paired[idx]
+            outcome = int(res["market_prob"] >= 0.5)
+            direction = bet_state["direction"]
+            bet_wins = (
+                (direction == "BUY" and outcome == 1)
+                or (direction == "SELL" and outcome == 0)
             )
-        )
-        traj_rows.append({
-            "ts": sig["timestamp_utc"],
-            "event": f"{direction} {sig['team']} ({sig['market_type']})",
-            "bankroll": round(bankroll, 4),
-        })
+            stake = bet_state["stake"]
+            pnl = (
+                stake * (bet_state["decimal_odds"] - 1.0) if bet_wins
+                else -stake
+            )
+            bankroll += pnl
+            settled_bets.append(
+                Bet(
+                    ts_signal=sig["timestamp_utc"],
+                    ts_resolution=res["timestamp_utc"],
+                    market_type=sig["market_type"],
+                    team=sig["team"],
+                    season=sig["season"],
+                    direction=direction,
+                    entry_prob=bet_state["entry_prob"],
+                    ai_prob=bet_state["ai_prob"],
+                    kelly_fraction=round(bet_state["kelly_fraction"], 4),
+                    stake=round(stake, 4),
+                    decimal_odds=round(bet_state["decimal_odds"], 4),
+                    outcome=outcome,
+                    bet_wins=bet_wins,
+                    pnl=round(pnl, 4),
+                    bankroll_at_placement=round(
+                        bet_state["bankroll_at_placement"], 4
+                    ),
+                    bankroll_after=round(bankroll, 4),
+                )
+            )
+            traj_rows.append({
+                "ts": res["timestamp_utc"],
+                "event": f"settle {direction} {sig['team']} ({sig['market_type']})",
+                "bankroll": round(bankroll, 4),
+            })
 
-    return bets, pd.DataFrame(traj_rows)
+        # 2) Snapshot bankroll for all placements at this timestamp.
+        placement_snapshot = bankroll
+        # Available capital = snapshot minus still-open committed stakes.
+        # Same-timestamp placements all share this same snapshot.
+        committed = sum(b["stake"] for b in open_bets.values())
+        free = max(0.0, placement_snapshot - committed)
+
+        # Compute proposed stakes for every placement at this ts.
+        proposals: list[tuple[int, float, dict]] = []
+        for _, kind, idx in group:
+            if kind != "place":
+                continue
+            sig, _ = paired[idx]
+            ai_p = sig["ai_prob"]
+            mkt_p = sig["market_prob"]
+            direction = "BUY" if "BUY" in sig["signal"].upper() else "SELL"
+            if direction == "BUY":
+                p, m = ai_p, mkt_p
+            else:
+                p, m = 1 - ai_p, 1 - mkt_p
+            f_full, d_odds = _full_kelly(p, m)
+            stake_frac = max(0.0, f_full) * kelly_multiplier
+            proposed = placement_snapshot * stake_frac
+            if proposed <= 0:
+                continue
+            proposals.append(
+                (idx, proposed, {
+                    "direction": direction,
+                    "decimal_odds": d_odds,
+                    "kelly_fraction": f_full,
+                    "entry_prob": mkt_p,
+                    "ai_prob": ai_p,
+                }),
+            )
+
+        # 3) Scale down pro-rata if collective stake would exceed free capital.
+        total_proposed = sum(p for _, p, _ in proposals)
+        scale = 1.0
+        if total_proposed > free > 0:
+            scale = free / total_proposed
+        elif total_proposed > 0 and free <= 0:
+            # Fully committed elsewhere — no new placements can open.
+            proposals = []
+
+        # 4) Open bets at this timestamp — all from the same snapshot.
+        for idx, proposed, meta in proposals:
+            final_stake = proposed * scale
+            if final_stake <= 0:
+                continue
+            open_bets[idx] = {
+                "stake": final_stake,
+                "bankroll_at_placement": placement_snapshot,
+                **meta,
+            }
+            sig, _ = paired[idx]
+            traj_rows.append({
+                "ts": sig["timestamp_utc"],
+                "event": (
+                    f"place {meta['direction']} {sig['team']} "
+                    f"({sig['market_type']}) stake={final_stake:.2f}"
+                ),
+                "bankroll": round(bankroll, 4),  # unchanged at placement
+            })
+
+    return settled_bets, pd.DataFrame(traj_rows)
 
 
 # ── metrics ─────────────────────────────────────────────────────────────

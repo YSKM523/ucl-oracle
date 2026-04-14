@@ -302,3 +302,142 @@ def test_same_timestamp_resolution_does_not_pair():
     ]
     bets, _ = simulate_pnl(entries, starting_bankroll=100.0)
     assert len(bets) == 0
+
+
+# ── regression tests for placement-vs-settlement timing (Codex #2) ────
+
+def test_same_timestamp_signals_size_from_same_bankroll_snapshot():
+    """Two signals logged at the SAME timestamp must be sized off the same
+    pre-placement bankroll — later list position must not benefit from
+    (or be penalised by) earlier bets that settle later."""
+    entries = [
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-14T10:00:00Z", "signal", "B", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        # A settles first (wins), B settles later — but both should have
+        # been sized off the starting bankroll of 100, not 100 + A's PnL.
+        _log("2026-04-15T20:00:00Z", "resolution", "A", market_prob=1.0),
+        _log("2026-04-16T20:00:00Z", "resolution", "B", market_prob=1.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0,
+                           kelly_multiplier=0.5)
+    assert len(bets) == 2
+    # Both bets should see bankroll_at_placement == 100
+    for b in bets:
+        assert b.bankroll_at_placement == pytest.approx(100.0, abs=0.001)
+    # Same Kelly & stake for identical signals → equal stakes
+    assert bets[0].stake == pytest.approx(bets[1].stake, abs=0.001)
+
+
+def test_later_signal_sees_bankroll_after_earlier_settlement():
+    """A signal placed AFTER an earlier bet settles should size off the
+    updated bankroll (post-settlement), not the starting one."""
+    entries = [
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-14T20:00:00Z", "resolution", "A", market_prob=1.0),  # A wins
+        _log("2026-04-15T10:00:00Z", "signal", "B", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-16T20:00:00Z", "resolution", "B", market_prob=1.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0,
+                           kelly_multiplier=0.5)
+    assert len(bets) == 2
+    # Bets are returned in settlement order; A settles 04-14T20, B at 04-16T20
+    a, b = bets[0], bets[1]
+    assert a.team == "A"
+    assert b.team == "B"
+    assert a.bankroll_at_placement == pytest.approx(100.0, abs=0.001)
+    # B placed on 04-15, AFTER A settled at 04-14T20 with PnL +25
+    assert b.bankroll_at_placement == pytest.approx(125.0, abs=0.001)
+    # B's stake scales with its larger bankroll
+    assert b.stake > a.stake
+
+
+def test_overlapping_bet_sizes_off_unpeeked_bankroll_when_capital_available():
+    """Signal B placed while A is still OPEN must use the bankroll as of
+    B's placement timestamp, which does NOT include A's unrealized PnL.
+    So B's stake must NOT be inflated by A's (future) win."""
+    entries = [
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-14T18:00:00Z", "signal", "B", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-15T10:00:00Z", "resolution", "A", market_prob=1.0),
+        _log("2026-04-16T10:00:00Z", "resolution", "B", market_prob=1.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0,
+                           kelly_multiplier=0.5)
+    a = next(b for b in bets if b.team == "A")
+    b_bet = next(b for b in bets if b.team == "B")
+    # Critical no-peek property: B's sizing bankroll does not yet contain
+    # A's +25 PnL, so B sees 100 just like A did.
+    assert b_bet.bankroll_at_placement == pytest.approx(100.0, abs=0.001)
+    assert a.bankroll_at_placement == pytest.approx(100.0, abs=0.001)
+    # Both see identical bankroll snapshot → identical stakes
+    assert b_bet.stake == pytest.approx(a.stake, abs=0.001)
+
+
+def test_same_timestamp_placements_are_pro_rata_scaled_if_over_bankroll():
+    """If concurrent placements would collectively exceed bankroll, they
+    must be scaled down pro-rata rather than one starving the other."""
+    # Force the situation by using very-high-edge signals that each want
+    # a large chunk of bankroll. Full-Kelly at p=0.95, m=0.10 → f ≈ 0.944
+    # Half-Kelly per bet = bankroll * 0.944 / 2 = 47% of bankroll.
+    # 3 concurrent such bets would claim 141% of bankroll → must scale.
+    entries = []
+    for team in ("A", "B", "C"):
+        entries += [
+            _log("2026-04-14T10:00:00Z", "signal", team, ai_prob=0.95,
+                 market_prob=0.10, signal="STRONG BUY", edge_pct=85),
+            _log("2026-04-15T20:00:00Z", "resolution", team, market_prob=1.0),
+        ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0,
+                           kelly_multiplier=0.5)
+    assert len(bets) == 3
+    # Combined committed stakes may not exceed starting bankroll
+    total_stake = sum(b.stake for b in bets)
+    assert total_stake <= 100.0 + 1e-6
+
+
+def test_signal_order_at_same_timestamp_does_not_affect_outcome():
+    """Reordering same-timestamp signals in the log must not change PnL —
+    they all pull from the same bankroll snapshot."""
+    base_entries = [
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-14T10:00:00Z", "signal", "B", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-15T20:00:00Z", "resolution", "A", market_prob=1.0),
+        _log("2026-04-15T20:00:00Z", "resolution", "B", market_prob=0.0),
+    ]
+    swapped = [base_entries[1], base_entries[0], *base_entries[2:]]
+    bets_a, _ = simulate_pnl(base_entries, starting_bankroll=100.0)
+    bets_b, _ = simulate_pnl(swapped, starting_bankroll=100.0)
+    # Same final bankroll, same stakes, regardless of log list order.
+    assert bets_a[-1].bankroll_after == pytest.approx(
+        bets_b[-1].bankroll_after, abs=0.001
+    )
+    # And sum of stakes equal
+    assert sum(b.stake for b in bets_a) == pytest.approx(
+        sum(b.stake for b in bets_b), abs=0.001
+    )
+
+
+def test_bet_output_is_in_settlement_order_not_placement_order():
+    """Bets are emitted in the order their resolutions land, matching the
+    real bankroll state evolution."""
+    entries = [
+        # A placed FIRST but settles LAST
+        _log("2026-04-14T09:00:00Z", "signal", "A", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-14T10:00:00Z", "signal", "B", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        # B settles first
+        _log("2026-04-15T10:00:00Z", "resolution", "B", market_prob=1.0),
+        _log("2026-04-16T10:00:00Z", "resolution", "A", market_prob=1.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0)
+    assert bets[0].team == "B"   # settled first
+    assert bets[1].team == "A"   # settled second
