@@ -529,3 +529,274 @@ def test_rejection_does_not_consume_bankroll_or_crash_other_bets():
     # VALID bet sizing unaffected by the REJECT signal existing
     assert bets[0].stake == pytest.approx(16.67, abs=0.5)
     assert bets[0].bankroll_after == pytest.approx(125.0, abs=0.5)
+
+
+# ══════════════════════════════════════════════════════════════════════
+# Additional regression coverage for the four Codex-named scenarios
+# (simultaneous signals / overlapping settlement / post-resolution /
+# boundary prices). These target interaction corners not covered by
+# the focused fixes above.
+# ══════════════════════════════════════════════════════════════════════
+
+# ── Simultaneous signals ──────────────────────────────────────────────
+
+def test_simultaneous_settlements_both_apply_once_each():
+    """Two bets that resolve at exactly the same timestamp must each land
+    their PnL against bankroll — no silent drop, no double-apply."""
+    entries = [
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-14T10:00:00Z", "signal", "B", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        # Both settle at the same wall-clock instant
+        _log("2026-04-15T20:00:00Z", "resolution", "A", market_prob=1.0),
+        _log("2026-04-15T20:00:00Z", "resolution", "B", market_prob=0.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0,
+                           kelly_multiplier=0.5)
+    assert len(bets) == 2
+    total_pnl = sum(b.pnl for b in bets)
+    # A wins (+25 on 16.67 stake), B loses (-16.67). Net: +8.33
+    assert total_pnl == pytest.approx(25.0 - 16.67, abs=0.05)
+    # Final bankroll must equal starting + total_pnl exactly (no drift)
+    assert bets[-1].bankroll_after == pytest.approx(
+        100.0 + total_pnl, abs=0.01
+    )
+
+
+def test_settle_and_place_at_same_timestamp_place_sees_updated_bankroll():
+    """If a settlement and a new placement share the same timestamp, the
+    settlement must apply FIRST so the new placement sizes off the
+    post-settle bankroll, not the pre-settle one."""
+    entries = [
+        # A placed earlier; resolves at 2026-04-15T20 with a WIN
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        # B placed at the SAME timestamp as A's resolution
+        _log("2026-04-15T20:00:00Z", "signal", "B", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-15T20:00:00Z", "resolution", "A", market_prob=1.0),
+        _log("2026-04-16T20:00:00Z", "resolution", "B", market_prob=1.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0,
+                           kelly_multiplier=0.5)
+    a_bet = next(b for b in bets if b.team == "A")
+    b_bet = next(b for b in bets if b.team == "B")
+    # A sized from 100; after win, bankroll → 125
+    assert a_bet.bankroll_at_placement == pytest.approx(100.0, abs=0.001)
+    # B must see 125 because A's settlement comes first at the shared ts
+    assert b_bet.bankroll_at_placement == pytest.approx(125.0, abs=0.001)
+
+
+def test_mixed_direction_signals_at_same_timestamp_both_placed():
+    """BUY on one team + SELL on another at the same ts must both sit
+    open simultaneously, sized from the same bankroll snapshot."""
+    entries = [
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-14T10:00:00Z", "signal", "B", ai_prob=0.10,
+             market_prob=0.40, signal="STRONG SELL", edge_pct=-30),
+        _log("2026-04-15T20:00:00Z", "resolution", "A", market_prob=1.0),
+        _log("2026-04-15T20:00:00Z", "resolution", "B", market_prob=0.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0,
+                           kelly_multiplier=0.5)
+    assert len(bets) == 2
+    directions = {b.team: b.direction for b in bets}
+    assert directions == {"A": "BUY", "B": "SELL"}
+    # Both must have been sized from 100 (same snapshot)
+    for b in bets:
+        assert b.bankroll_at_placement == pytest.approx(100.0, abs=0.001)
+
+
+# ── Overlapping settlement order ──────────────────────────────────────
+
+def test_three_nested_open_bets_settle_in_staggered_order():
+    """Three sequentially-placed bets, each settles only after all are
+    open. Settlement cascade must apply PnLs in the correct order."""
+    entries = [
+        _log("2026-04-14T09:00:00Z", "signal", "A", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-14T12:00:00Z", "signal", "B", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-14T15:00:00Z", "signal", "C", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        # All open at once; now settle in staggered order (C first, A last)
+        _log("2026-04-15T10:00:00Z", "resolution", "C", market_prob=1.0),
+        _log("2026-04-15T12:00:00Z", "resolution", "B", market_prob=0.0),
+        _log("2026-04-15T14:00:00Z", "resolution", "A", market_prob=1.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0,
+                           kelly_multiplier=0.5)
+    assert [b.team for b in bets] == ["C", "B", "A"]
+    # All three sized off the exact same pre-settlement bankroll of 100
+    # because every placement happened before ANY settlement.
+    for b in bets:
+        assert b.bankroll_at_placement == pytest.approx(100.0, abs=0.001)
+    # Each monotonically moves the bankroll_after field correctly
+    assert bets[0].bankroll_after > bets[0].bankroll_at_placement  # C won
+    assert bets[1].bankroll_after < bets[0].bankroll_after         # B lost
+    assert bets[2].bankroll_after > bets[1].bankroll_after         # A won
+
+
+def test_intermediate_bankroll_visible_in_trajectory():
+    """Trajectory must show each settlement as a distinct event, so the
+    max-drawdown calculation sees the intra-sequence troughs."""
+    entries = [
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-14T10:00:00Z", "signal", "B", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        # A loses first → intermediate trough; B wins later → recovers
+        _log("2026-04-15T10:00:00Z", "resolution", "A", market_prob=0.0),
+        _log("2026-04-16T10:00:00Z", "resolution", "B", market_prob=1.0),
+    ]
+    _, traj = simulate_pnl(entries, starting_bankroll=100.0,
+                           kelly_multiplier=0.5)
+    rows = traj.to_dict("records")
+    bankrolls = [r["bankroll"] for r in rows]
+    # Must have a trough below 100 and recovery above it
+    assert min(bankrolls) < 100.0
+    assert bankrolls[-1] > min(bankrolls)
+
+
+# ── Post-resolution signals ────────────────────────────────────────────
+
+def test_resolution_before_and_after_signal_latest_post_signal_wins():
+    """Two resolutions: one BEFORE the signal (stale), one AFTER (valid).
+    Only the post-signal resolution may pair."""
+    entries = [
+        # Stale resolution logged before any signal exists
+        _log("2026-04-10T10:00:00Z", "resolution", "A", market_prob=0.0),
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        # Valid post-signal resolution
+        _log("2026-04-15T20:00:00Z", "resolution", "A", market_prob=1.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0)
+    assert len(bets) == 1
+    assert bets[0].outcome == 1             # uses the post-signal one
+    assert bets[0].bet_wins is True
+
+
+def test_orphan_resolution_without_matching_signal_is_ignored():
+    """A resolution logged for a team that we never signalled must not
+    affect the simulation at all — no crash, no ghost bet."""
+    entries = [
+        # Signal only for A
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=0.60,
+             market_prob=0.40, signal="BUY", edge_pct=20),
+        _log("2026-04-15T20:00:00Z", "resolution", "A", market_prob=1.0),
+        # Orphan resolution for B — no matching signal
+        _log("2026-04-15T20:00:00Z", "resolution", "B", market_prob=1.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0)
+    assert len(bets) == 1
+    assert bets[0].team == "A"
+
+
+def test_same_team_two_event_slugs_two_independent_bets():
+    """Same team in the same season but two distinct event_slugs must
+    simulate as two independent bets, each pairing only with its own
+    event_slug's resolution."""
+    entries = [
+        {**_log("2026-04-14T10:00:00Z", "signal", "Arsenal", ai_prob=0.6,
+                market_prob=0.4, signal="BUY", edge_pct=20,
+                market="qf_advance"),
+         "event_slug": "qf-leg"},
+        {**_log("2026-04-15T10:00:00Z", "resolution", "Arsenal",
+                market_prob=1.0, market="qf_advance"),
+         "event_slug": "qf-leg"},
+        {**_log("2026-05-01T10:00:00Z", "signal", "Arsenal", ai_prob=0.55,
+                market_prob=0.45, signal="BUY", edge_pct=10,
+                market="qf_advance"),
+         "event_slug": "sf-leg"},
+        {**_log("2026-05-02T10:00:00Z", "resolution", "Arsenal",
+                market_prob=0.0, market="qf_advance"),
+         "event_slug": "sf-leg"},
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0)
+    assert len(bets) == 2
+    # First bet (QF leg) paired only with QF resolution, second (SF) only SF
+    assert bets[0].outcome == 1  # qf-leg resolution
+    assert bets[1].outcome == 0  # sf-leg resolution
+
+
+# ── Boundary market probabilities (end-to-end) ────────────────────────
+
+def test_market_prob_exactly_at_min_threshold_is_executable():
+    """Side prob == MIN_EXECUTABLE_PROB is an inclusive boundary — must
+    accept the bet, not reject it as non-executable."""
+    # BUY at market 0.01 (= MIN) → side_prob = 0.01, executable per helper
+    entries = [
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=0.5,
+             market_prob=MIN_EXECUTABLE_PROB, signal="BUY", edge_pct=49),
+        _log("2026-04-15T20:00:00Z", "resolution", "A", market_prob=1.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0,
+                           kelly_multiplier=0.5)
+    assert len(bets) == 1
+    assert bets[0].bet_wins is True
+
+
+def test_market_prob_just_below_threshold_is_rejected_end_to_end():
+    """0.009 (< 1%) must be rejected end-to-end — not just at helper."""
+    entries = [
+        # BUY at market 0.009 → side_prob = 0.009 < MIN
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=0.5,
+             market_prob=0.009, signal="BUY", edge_pct=49),
+        _log("2026-04-15T20:00:00Z", "resolution", "A", market_prob=1.0),
+    ]
+    bets, traj = simulate_pnl(entries, starting_bankroll=100.0)
+    assert len(bets) == 0
+    events = [r["event"] for r in traj.to_dict("records")
+              if isinstance(r["event"], str)]
+    assert any("rejected" in e for e in events)
+
+
+def test_market_prob_just_above_max_threshold_is_rejected():
+    """Symmetric: side prob just above MAX_EXECUTABLE_PROB also rejected.
+    YES=0.991 via SELL → side_prob = 0.009, which is below MIN."""
+    entries = [
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=0.01,
+             market_prob=0.991, signal="STRONG SELL", edge_pct=-98),
+        _log("2026-04-15T20:00:00Z", "resolution", "A", market_prob=0.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0)
+    assert len(bets) == 0
+
+
+def test_ai_prob_at_one_on_low_market_executes_with_full_kelly():
+    """AI certainty (p=1.0) on a non-boundary market must execute with
+    large but valid Kelly — not crash or get silently dropped."""
+    entries = [
+        _log("2026-04-14T10:00:00Z", "signal", "A", ai_prob=1.0,
+             market_prob=0.20, signal="STRONG BUY", edge_pct=80),
+        _log("2026-04-15T20:00:00Z", "resolution", "A", market_prob=1.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0,
+                           kelly_multiplier=0.5)
+    assert len(bets) == 1
+    # full-Kelly f = (1*5 - 1) / 4 = 1.0; Half-Kelly = 0.5 → stake = 50
+    assert bets[0].stake == pytest.approx(50.0, abs=0.1)
+    assert bets[0].bet_wins is True
+
+
+def test_boundary_market_prob_zero_crosses_does_not_poison_other_bets():
+    """A signal with YES=0 next to a valid signal must be rejected without
+    polluting the bankroll trajectory or the valid bet's stake."""
+    entries = [
+        _log("2026-04-14T10:00:00Z", "signal", "POISON", ai_prob=0.5,
+             market_prob=0.0, signal="BUY", edge_pct=50),
+        _log("2026-04-14T11:00:00Z", "signal", "CLEAN", ai_prob=0.6,
+             market_prob=0.4, signal="BUY", edge_pct=20),
+        _log("2026-04-15T20:00:00Z", "resolution", "POISON", market_prob=0.0),
+        _log("2026-04-15T21:00:00Z", "resolution", "CLEAN", market_prob=1.0),
+    ]
+    bets, _ = simulate_pnl(entries, starting_bankroll=100.0,
+                           kelly_multiplier=0.5)
+    assert len(bets) == 1
+    assert bets[0].team == "CLEAN"
+    # CLEAN must be sized exactly as if POISON never existed
+    assert bets[0].bankroll_at_placement == pytest.approx(100.0, abs=0.001)
+    assert bets[0].stake == pytest.approx(16.67, abs=0.5)
