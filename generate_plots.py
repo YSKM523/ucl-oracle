@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from config import PLOTS_DIR
+from config import PLOTS_DIR, QF_RESOLVED
 from data.fetcher_clubelo import fetch_all_histories
 from data.fetcher_polymarket import fetch_all_ucl_odds
 from data.elo import build_all_weekly_series
@@ -100,27 +100,39 @@ def main():
             plot_edge_bars(edges, "UCL Winner — Edge Detection",
                            PLOTS_DIR / "winner_edges.png")
 
-    semis_df = odds.get("semis")
-    if semis_df is not None and not semis_df.empty:
-        semis_market = dict(zip(semis_df["team"], semis_df["implied_prob"]))
-        plot_scatter(qf_advance_probs, semis_market,
-                     "AI vs Polymarket — QF Advancement",
-                     PLOTS_DIR / "ai_vs_polymarket_qf_scatter.png")
-        plot_side_by_side(qf_advance_probs, semis_market,
-                          "AI vs Polymarket — QF Advancement",
-                          PLOTS_DIR / "ai_vs_polymarket_qf_bars.png")
+    # QF advancement plots only make sense before the QF round resolves.
+    # After QFs close, the market settles to 0/1 and the plots are stale.
+    if not QF_RESOLVED:
+        semis_df = odds.get("semis")
+        if semis_df is not None and not semis_df.empty:
+            semis_market = dict(zip(semis_df["team"], semis_df["implied_prob"]))
+            plot_scatter(qf_advance_probs, semis_market,
+                         "AI vs Polymarket — QF Advancement",
+                         PLOTS_DIR / "ai_vs_polymarket_qf_scatter.png")
+            plot_side_by_side(qf_advance_probs, semis_market,
+                              "AI vs Polymarket — QF Advancement",
+                              PLOTS_DIR / "ai_vs_polymarket_qf_bars.png")
 
-        if per_model_tourn is not None:
-            model_qf_probs = {
-                mn: {t: per_model_tourn[mn][t]["qf_advance"] for t in per_model_tourn[mn]}
-                for mn in per_model_tourn
-            }
-        else:
-            model_qf_probs = None
-        adv_edges = detect_edges(qf_advance_probs, semis_market, model_probs=model_qf_probs)
-        if not adv_edges.empty:
-            plot_edge_bars(adv_edges, "QF Advancement — Edge Detection",
-                           PLOTS_DIR / "qf_advance_edges.png")
+            if per_model_tourn is not None:
+                model_qf_probs = {
+                    mn: {t: per_model_tourn[mn][t]["qf_advance"] for t in per_model_tourn[mn]}
+                    for mn in per_model_tourn
+                }
+            else:
+                model_qf_probs = None
+            adv_edges = detect_edges(qf_advance_probs, semis_market, model_probs=model_qf_probs)
+            if not adv_edges.empty:
+                plot_edge_bars(adv_edges, "QF Advancement — Edge Detection",
+                               PLOTS_DIR / "qf_advance_edges.png")
+    else:
+        # Clean up stale plot files from the pre-QF-resolution runs
+        for stale in ("ai_vs_polymarket_qf_scatter.png",
+                      "ai_vs_polymarket_qf_bars.png",
+                      "qf_advance_edges.png"):
+            stale_path = PLOTS_DIR / stale
+            if stale_path.exists():
+                stale_path.unlink()
+                print(f"  Removed stale plot: {stale_path}")
 
     print(f"\nAll plots saved to {PLOTS_DIR}/")
 

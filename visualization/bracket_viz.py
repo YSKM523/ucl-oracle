@@ -8,7 +8,15 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
 
-from config import FIRST_LEG_RESULTS, PLOTS_DIR
+from datetime import datetime, timezone
+
+from config import (
+    FIRST_LEG_RESULTS,
+    PLOTS_DIR,
+    QF_RESOLVED,
+    QF_WINNERS,
+    SECOND_LEG_RESULTS,
+)
 
 
 # ── Layout constants (center-based, so lines and boxes stay in sync) ────────
@@ -129,8 +137,14 @@ def plot_bracket(
     # ── Title ───────────────────────────────────────────────────────────
     ax.text(50, plot_top - 1.2, "2025-26 UEFA Champions League",
             fontsize=17, fontweight="bold", ha="center", va="center", color="#1a237e")
-    ax.text(50, plot_top - 3.0, "Knockout Bracket — AI Advancement Probabilities",
+    stage_label = "Semifinal Preview — QFs Resolved" if QF_RESOLVED \
+        else "Knockout Bracket — AI Advancement Probabilities"
+    ax.text(50, plot_top - 3.0, stage_label,
             fontsize=11, ha="center", va="center", color="#555")
+    # Updated-on stamp (top-right corner)
+    update_str = datetime.now(timezone.utc).strftime("Updated: %Y-%m-%d")
+    ax.text(98, plot_top - 1.2, update_str,
+            fontsize=8, ha="right", va="center", color="#888", style="italic")
 
     # ── QF column ───────────────────────────────────────────────────────
     fl = FIRST_LEG_RESULTS
@@ -152,22 +166,56 @@ def plot_bracket(
         team_cy_qf[away] = cy_away
         pair_mid_cy[qf_id] = _pair_mid(cy_home, cy_away)
 
-        leg_str = f"1st leg: {leg['home_goals']}-{leg['away_goals']}"
-        draw_team_box(X_QF, cy_home, home, probs[home]["qf"])
-        draw_team_box(X_QF, cy_away, away, probs[away]["qf"])
-        # Put 1st-leg caption centered between the pair, to the right of the boxes
+        # Determine caption: show both legs + aggregate if QFs resolved
+        if QF_RESOLVED and qf_id in SECOND_LEG_RESULTS:
+            sl = SECOND_LEG_RESULTS[qf_id]
+            agg_home = leg["home_goals"] + sl["away_goals"]
+            agg_away = leg["away_goals"] + sl["home_goals"]
+            winner = QF_WINNERS[qf_id]
+            leg_str = (
+                f"1st: {leg['home_goals']}-{leg['away_goals']}  |  "
+                f"2nd: {sl['away_goals']}-{sl['home_goals']}\n"
+                f"agg {agg_home}-{agg_away}  →  {winner}"
+            )
+            caption_face = "#e8f5e9"   # light green = resolved
+            caption_edge = "#81c784"
+            caption_color = "#1b5e20"
+        else:
+            leg_str = f"1st leg: {leg['home_goals']}-{leg['away_goals']}"
+            caption_face = "#f3e5f5"
+            caption_edge = "#b39ddb"
+            caption_color = "#4a148c"
+
+        # When QFs are resolved, mark the winner with a check and loser with strikethrough-style dimming
+        if QF_RESOLVED:
+            winner = QF_WINNERS[qf_id]
+            home_is_winner = (home == winner)
+            away_is_winner = (away == winner)
+            # Winner in bright green (high alpha), loser dimmed
+            draw_team_box(X_QF, cy_home, home + (" ✓" if home_is_winner else ""),
+                          probs[home]["qf"] if home_is_winner else 0.0)
+            draw_team_box(X_QF, cy_away, away + (" ✓" if away_is_winner else ""),
+                          probs[away]["qf"] if away_is_winner else 0.0)
+        else:
+            draw_team_box(X_QF, cy_home, home, probs[home]["qf"])
+            draw_team_box(X_QF, cy_away, away, probs[away]["qf"])
+
+        # Put caption centered between the pair, to the right of the boxes
         ax.text(X_QF + BOX_W / 2, _pair_mid(cy_home, cy_away),
                 leg_str, fontsize=7, ha="center", va="center",
-                color="#4a148c", style="italic", fontweight="bold",
-                bbox=dict(boxstyle="round,pad=0.15", facecolor="#f3e5f5",
-                          edgecolor="#b39ddb", linewidth=0.6))
+                color=caption_color, style="italic", fontweight="bold",
+                bbox=dict(boxstyle="round,pad=0.25", facecolor=caption_face,
+                          edgecolor=caption_edge, linewidth=0.6))
 
     # ── Column headers ──────────────────────────────────────────────────
     header_y = plot_top - 5.0
     header_sub_y = header_y - 1.6
-    ax.text(X_QF + BOX_W / 2, header_y, "QUARTER-FINALS",
-            fontsize=11, fontweight="bold", ha="center", color="#333")
-    ax.text(X_QF + BOX_W / 2, header_sub_y, "2nd legs: Apr 14-15",
+    qf_header_label = "QUARTER-FINALS (✓ complete)" if QF_RESOLVED else "QUARTER-FINALS"
+    qf_header_sub = "Played Apr 7-15, 2026" if QF_RESOLVED else "2nd legs: Apr 14-15"
+    ax.text(X_QF + BOX_W / 2, header_y, qf_header_label,
+            fontsize=11, fontweight="bold", ha="center",
+            color="#2e7d32" if QF_RESOLVED else "#333")
+    ax.text(X_QF + BOX_W / 2, header_sub_y, qf_header_sub,
             fontsize=8, ha="center", color="#777")
 
     ax.text(X_SF + BOX_W / 2, header_y, "SEMI-FINALS",
@@ -192,18 +240,31 @@ def plot_bracket(
         "SF2_bottom": pair_mid_cy["QF4"],
     }
 
-    # For each SF slot, pick the team most likely to reach SF based on QF advance prob
-    def top_from_pair(home, away):
-        return home if probs[home]["qf"] >= probs[away]["qf"] else away
+    # For each SF slot, either use the actual QF winner (if resolved) or
+    # the model's most-likely QF advancer.
+    if QF_RESOLVED:
+        sf_occupants = {
+            "SF1_top":    QF_WINNERS["QF1"],
+            "SF1_bottom": QF_WINNERS["QF2"],
+            "SF2_top":    QF_WINNERS["QF3"],
+            "SF2_bottom": QF_WINNERS["QF4"],
+        }
+    else:
+        def top_from_pair(home, away):
+            return home if probs[home]["qf"] >= probs[away]["qf"] else away
 
-    sf_occupants = {
-        "SF1_top":    top_from_pair(fl["QF1"]["home"], fl["QF1"]["away"]),
-        "SF1_bottom": top_from_pair(fl["QF2"]["home"], fl["QF2"]["away"]),
-        "SF2_top":    top_from_pair(fl["QF3"]["home"], fl["QF3"]["away"]),
-        "SF2_bottom": top_from_pair(fl["QF4"]["home"], fl["QF4"]["away"]),
-    }
+        sf_occupants = {
+            "SF1_top":    top_from_pair(fl["QF1"]["home"], fl["QF1"]["away"]),
+            "SF1_bottom": top_from_pair(fl["QF2"]["home"], fl["QF2"]["away"]),
+            "SF2_top":    top_from_pair(fl["QF3"]["home"], fl["QF3"]["away"]),
+            "SF2_bottom": top_from_pair(fl["QF4"]["home"], fl["QF4"]["away"]),
+        }
+
+    # When QFs resolved, SF box shows P(final) — probability to reach final
+    # (not QF-advance, which is trivially 1.0 for semifinalists).
+    sf_prob_key = "final" if QF_RESOLVED else "qf"
     for slot, team in sf_occupants.items():
-        draw_team_box(X_SF, sf_cy[slot], team, probs[team]["qf"])
+        draw_team_box(X_SF, sf_cy[slot], team, probs[team][sf_prob_key])
 
     # Connectors: each QF pair → its SF slot
     pair_to_slot = {
@@ -277,11 +338,19 @@ def plot_bracket(
 
 
 def plot_probability_bars(results_df, save_path=None, subtitle: str = "TSFM Ensemble"):
-    """Horizontal bar chart of P(champion) for all 8 teams."""
+    """Horizontal bar chart of P(champion).
+
+    When QFs are resolved, only shows the 4 semifinalists (eliminated teams
+    have P(champion)=0 and are uninformative).
+    """
     if save_path is None:
         save_path = PLOTS_DIR / "champion_probabilities.png"
 
-    df = results_df.sort_values("P(champion)", ascending=True)
+    df = results_df.copy()
+    # Filter to teams still alive (when QFs resolved, eliminated teams = 0%)
+    if QF_RESOLVED:
+        df = df[df["P(champion)"] > 0].copy()
+    df = df.sort_values("P(champion)", ascending=True)
 
     fig, ax = plt.subplots(figsize=(10, 6))
     colors = plt.cm.YlGn(np.linspace(0.3, 0.9, len(df)))
@@ -295,11 +364,20 @@ def plot_probability_bars(results_df, save_path=None, subtitle: str = "TSFM Ense
                 f"{row['P(champion)']:.1%}", va="center",
                 fontsize=10, fontweight="bold")
 
+    stage_label = "Semifinalists" if QF_RESOLVED else "All Teams"
     ax.set_xlabel("P(Champion) %", fontsize=12)
-    ax.set_title(f"2025-26 UCL Winner Probabilities\n({subtitle}, 50K Monte Carlo)",
-                 fontsize=13, fontweight="bold")
+    ax.set_title(
+        f"2025-26 UCL Winner Probabilities — {stage_label}\n"
+        f"({subtitle}, 50K Monte Carlo)",
+        fontsize=13, fontweight="bold",
+    )
     ax.set_xlim(0, max(df["P(champion)"] * 100) * 1.15)
     ax.grid(axis="x", alpha=0.3)
+
+    # Updated-on stamp
+    update_str = datetime.now(timezone.utc).strftime("Updated: %Y-%m-%d")
+    fig.text(0.98, 0.02, update_str, fontsize=8, color="#888",
+             ha="right", va="bottom", style="italic")
 
     plt.tight_layout()
     fig.savefig(save_path, dpi=150, bbox_inches="tight", facecolor="white")

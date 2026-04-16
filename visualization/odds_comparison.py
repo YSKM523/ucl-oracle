@@ -2,12 +2,20 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
 from config import PLOTS_DIR
+
+
+def _add_update_stamp(fig):
+    update_str = datetime.now(timezone.utc).strftime("Updated: %Y-%m-%d")
+    fig.text(0.98, 0.02, update_str, fontsize=8, color="#888",
+             ha="right", va="bottom", style="italic")
 
 
 def plot_scatter(
@@ -58,6 +66,7 @@ def plot_scatter(
     ax.set_xlim(0, max_val)
     ax.set_ylim(0, max_val)
 
+    _add_update_stamp(fig)
     plt.tight_layout()
     fig.savefig(save_path, dpi=150, bbox_inches="tight", facecolor="white")
     plt.close(fig)
@@ -70,11 +79,17 @@ def plot_side_by_side(
     title: str = "AI vs Polymarket — UCL Winner",
     save_path=None,
 ):
-    """Grouped bar chart: AI vs Polymarket side by side."""
+    """Grouped bar chart: AI vs Polymarket side by side.
+
+    Filters out teams with 0% on both sides (eliminated) to keep the plot tight.
+    """
     if save_path is None:
         save_path = PLOTS_DIR / "ai_vs_polymarket_bars.png"
 
-    teams = sorted(ai_probs.keys(), key=ai_probs.get, reverse=True)
+    # Keep only teams with nonzero prob on at least one side
+    teams = [t for t in ai_probs
+             if ai_probs[t] > 0 or market_probs.get(t, 0) > 0]
+    teams = sorted(teams, key=ai_probs.get, reverse=True)
     ai_vals = [ai_probs[t] * 100 for t in teams]
     mkt_vals = [market_probs.get(t, 0) * 100 for t in teams]
 
@@ -104,6 +119,7 @@ def plot_side_by_side(
             ax.text(bar.get_x() + bar.get_width()/2, h + 0.3, f"{h:.1f}%",
                     ha="center", fontsize=8, color="#ef6c00")
 
+    _add_update_stamp(fig)
     plt.tight_layout()
     fig.savefig(save_path, dpi=150, bbox_inches="tight", facecolor="white")
     plt.close(fig)
@@ -158,6 +174,7 @@ def plot_edge_bars(
     ax.grid(axis="x", alpha=0.3)
     ax.tick_params(axis="y", labelsize=11)
 
+    _add_update_stamp(fig)
     plt.tight_layout()
     fig.savefig(save_path, dpi=150, bbox_inches="tight", facecolor="white")
     plt.close(fig)

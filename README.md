@@ -393,20 +393,41 @@ Each QF leg applies a performance-based Elo bump: `ΔElo = K × clip(effective_g
 
 ## Visualizations
 
-### Bracket
+All plots are stamped with the generation date. Regenerate anytime with
+`python generate_plots.py`.
+
+### Bracket (Semifinal Preview — QFs Resolved)
+
+Winners from each QF are highlighted with ✓ and carried to the SF column
+with their P(final) probability. Eliminated teams are shown in grey.
+Both legs and aggregate are printed in the per-tie caption.
 
 ![UCL Bracket](results/plots/ucl_bracket.png)
 
-### Champion Probabilities
+### Champion Probabilities (4 Semifinalists)
+
+After QF resolution this chart only shows the 4 live semifinalists —
+eliminated teams (Barcelona, Liverpool, Real Madrid, Sporting CP) collapsed to 0%.
 
 ![Champion Probabilities](results/plots/champion_probabilities.png)
 
-### AI vs Polymarket
+### AI vs Polymarket — UCL Winner
+
+Bar chart filters to teams with nonzero probability on either side.
 
 ![AI vs Polymarket Scatter](results/plots/ai_vs_polymarket_scatter.png)
 ![AI vs Polymarket Bars](results/plots/ai_vs_polymarket_bars.png)
 
+### Winner-Market Edges
+
+Top-edge signals vs the live Polymarket UCL-Winner book.
+
+![Winner Edges](results/plots/winner_edges.png)
+
 ### Elo Trajectories
+
+Last 2 years of clubelo.com weekly Elo for the 8 QF teams (retained
+even for eliminated teams — the historical trajectory is still context).
 
 ![Elo Trajectories](results/plots/elo_trajectories.png)
 

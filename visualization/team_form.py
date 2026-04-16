@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -10,6 +12,12 @@ import numpy as np
 import pandas as pd
 
 from config import PLOTS_DIR, TSFM_FORECAST_HORIZON
+
+
+def _add_update_stamp(fig):
+    update_str = datetime.now(timezone.utc).strftime("Updated: %Y-%m-%d")
+    fig.text(0.98, 0.02, update_str, fontsize=8, color="#888",
+             ha="right", va="bottom", style="italic")
 
 
 def plot_team_elo_trajectories(
@@ -51,6 +59,7 @@ def plot_team_elo_trajectories(
     ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
     plt.xticks(rotation=30)
 
+    _add_update_stamp(fig)
     plt.tight_layout()
     fig.savefig(save_path, dpi=150, bbox_inches="tight", facecolor="white")
     plt.close(fig)
@@ -105,6 +114,7 @@ def plot_team_forecast(
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
     plt.xticks(rotation=30)
 
+    _add_update_stamp(fig)
     plt.tight_layout()
     fig.savefig(save_path, dpi=150, bbox_inches="tight", facecolor="white")
     plt.close(fig)
