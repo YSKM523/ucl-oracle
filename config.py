@@ -16,6 +16,13 @@ for d in [CACHE_DIR, RESULTS_DIR, PLOTS_DIR,
 # ── Tournament: 2025-26 UEFA Champions League ──────────────────────────────
 TOURNAMENT_NAME = "2025-26 UEFA Champions League"
 QF_SECOND_LEG_DATES = ("2026-04-14", "2026-04-15")
+# Confirmed SF schedule (UEFA announced 2026-04-16):
+#   SF1 1st leg: PSG vs Bayern Munich — 2026-04-28 (Parc des Princes)
+#   SF2 1st leg: Atletico Madrid vs Arsenal — 2026-04-29 (Metropolitano)
+#   SF2 2nd leg: Arsenal vs Atletico Madrid — 2026-05-05 (Emirates)
+#   SF1 2nd leg: Bayern Munich vs PSG — 2026-05-06 (Allianz Arena)
+SF_FIRST_LEG_DATES = {"SF1": "2026-04-28", "SF2": "2026-04-29"}
+SF_SECOND_LEG_DATES = {"SF1": "2026-05-06", "SF2": "2026-05-05"}
 SF_DATES = ("2026-04-28", "2026-04-29", "2026-05-05", "2026-05-06")
 FINAL_DATE = "2026-05-30"
 FINAL_VENUE = "Budapest"
@@ -148,6 +155,14 @@ INJURY_DEFAULT_WEIGHT = 0.40  # unrecognised string → assume moderate impact
 # Per-team override list — use when FotMob misses something known from news.
 # Format: {"Team Name": [{"name": "...", "transfer_value_m": 50, "expected_return": "..."}]}
 MANUAL_INJURY_OVERRIDES: dict[str, list[dict]] = {}
+
+# ── Suspensions (yellow card accumulation → miss SF 1st leg) ──────────────
+# Players receiving 3rd yellow in QF second leg are banned for SF first leg.
+# Source: UEFA disciplinary records, verified 2026-04-16.
+SF_SUSPENSIONS = {
+    "Atletico Madrid": ["Marc Pubill"],   # 3rd yellow in QF2 2nd leg
+    # PSG, Bayern Munich, Arsenal: no suspensions
+}
 
 # Cap total injury penalty per team (avoid extreme Elo collapses even if 5+
 # superstars are out; beyond this the model becomes unreliable anyway).

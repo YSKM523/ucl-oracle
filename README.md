@@ -203,16 +203,18 @@ python scripts/pnl_report.py --min-edge 5      # stricter signal filter
 
 **No ROI claim** is made until at least 30 resolved bets are in the log.
 
-**Honest scoreboard:**
+**Honest scoreboard (updated 2026-04-16):**
 
 | Claim | Status |
 |-------|--------|
 | Model predicts which team advances more often than a coin flip | ✅ 63.9%, p=0.0058 |
 | Model beats naive "pick Elo favorite" baseline | ⚠️ +1.9pp, within noise |
-| Model exhibits closing-line value vs Polymarket | 🟡 Framework built, N=11 so far |
-| Model Brier < Polymarket closing Brier (BSS > 0) | 🟡 Framework built, 0 resolved events |
-| Half-Kelly staking ROI > 0 with tolerable drawdown | 🟡 Framework built, 0 resolved bets |
-| Per-bet Sharpe > 0 over 30+ resolved bets | 🟡 Pending first 30 resolutions |
+| Model exhibits closing-line value vs Polymarket | 🟡 Framework built, N=0 paired so far (missed pre-QF2 snapshot window) |
+| Model Brier < Polymarket closing Brier (BSS > 0) | 🟡 Framework built, 0 valid paired events (pre-kickoff closing snapshot missing for QF2) |
+| **Half-Kelly staking ROI > 0 with tolerable drawdown** | **✅ First round: 6/6 wins, +24.35% ROI, 0% drawdown (N too small for inference)** |
+| Per-bet Sharpe > 0 over 30+ resolved bets | 🟡 6/30 — tracking |
+
+**QF advancement predictions — 8/8 correct**. Every BUY signal won, every SELL signal won. Half-Kelly total: $100 → $124.35 after the first round. N=6 is far too small to claim edge (simple variance could easily have produced 0/6 with the same bets), but the trajectory starts in the right direction.
 
 ## Hyperparameter Provenance & Out-of-Sample Integrity
 

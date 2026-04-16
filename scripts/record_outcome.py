@@ -31,7 +31,7 @@ from markets.signal_log import append_resolution  # noqa: E402
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--market", required=True,
-                    choices=["winner", "qf_advance"])
+                    choices=["winner", "qf_advance", "sf_advance"])
     ap.add_argument("--team", required=True)
     out = ap.add_mutually_exclusive_group(required=True)
     out.add_argument("--advanced", "--yes", dest="outcome",
