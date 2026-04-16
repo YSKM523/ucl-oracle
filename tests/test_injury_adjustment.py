@@ -44,13 +44,13 @@ def test_squad_player_tier_is_small():
 def test_multiple_injuries_sum():
     injuries = {
         "Liverpool": [
-            FakeInjury("Alisson", 17, "Early May 2026"),   # tier 7 * 0.4 = 2.8
+            FakeInjury("Alisson", 17, "Early May 2026"),   # tier 7 * 0.33 = 2.31
             FakeInjury("Bradley", 39, "Out for season"),    # tier 7 * 1.0 = 7.0
             FakeInjury("Jones", 49, "Doubtful"),            # tier 15 * 0.5 = 7.5
         ]
     }
     deltas, _ = compute_injury_penalties(injuries)
-    assert deltas["Liverpool"] == pytest.approx(-(2.8 + 7.0 + 7.5), abs=0.01)
+    assert deltas["Liverpool"] == pytest.approx(-(2.31 + 7.0 + 7.5), abs=0.01)
 
 
 def test_total_cap_caps_extreme_teams():

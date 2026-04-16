@@ -2,108 +2,99 @@
 
 AI predictions for the 2025-26 UEFA Champions League winner, from the quarterfinal stage onwards.
 
-Uses **Club Elo + first-leg xG adjustment + injury-weighted Elo + Poisson Scoreline + Monte Carlo** as the production stack, compared against Polymarket odds to find edges. A 3-model TSFM ensemble (Chronos-2 / TimesFM-2.5 / FlowState) is retained behind `--with-tsfm` as an ablation/research layer after a 5-season, 83-tie backtest showed it added no point-prediction skill over pure Elo.
+Uses **Club Elo + QF xG adjustment (both legs) + injury-weighted Elo + Poisson Scoreline + Monte Carlo** as the production stack, compared against Polymarket odds to find edges. A 3-model TSFM ensemble (Chronos-2 / TimesFM-2.5 / FlowState) is retained behind `--with-tsfm` as an ablation/research layer after a 5-season, 83-tie backtest showed it added no point-prediction skill over pure Elo.
 
 **Author:** [YSKM](https://github.com/YSKM523) | **License:** MIT | **Language:** Python
 
 Sister projects: [worldcup-oracle](../worldcup-oracle) | [fin-forecast-arena](../fin-forecast-arena)
 
-## Predictions (April 14, 2026 — QF Second-Leg Match Day)
+## Predictions (April 16, 2026 — Semifinal Preview)
 
-Final pre-match predictions before the QF second legs (QF3 & QF4 tonight; QF1 & QF2 tomorrow). Model applies two Elo adjustments before Monte Carlo: (1) first-leg xG performance residual (real per-shot xG pulled live from FotMob shotmap), (2) per-player injury penalties weighted by market value × expected availability. QF aggregates still use actual goals from the first legs.
+Quarterfinals completed on April 14-15. Model now uses **known QF results** (no more QF simulation) and applies **two rounds of Elo adjustments** (first-leg + second-leg xG performance residuals from FotMob shotmap data), plus per-player injury penalties.
+
+### QF Results
+
+| QF | 1st Leg | 2nd Leg | Aggregate | Advances |
+|----|---------|---------|-----------|----------|
+| QF1 | PSG 2-0 Liverpool | Liverpool 0-2 PSG | **PSG 4-0** | PSG |
+| QF2 | Real Madrid 1-2 Bayern | Bayern 4-3 Real Madrid | **Bayern 6-4** | Bayern Munich |
+| QF3 | Barcelona 0-2 Atletico | Atletico 1-2 Barcelona | **Atletico 3-2** | Atletico Madrid |
+| QF4 | Sporting 0-1 Arsenal | Arsenal 0-0 Sporting | **Arsenal 1-0** | Arsenal |
+
+### Semifinal Matchups (April 28-29 / May 5-6)
+
+```
+SF1: PSG vs Bayern Munich      (PSG home 1st leg, Bayern home 2nd leg)
+SF2: Atletico Madrid vs Arsenal (Atletico home 1st leg, Arsenal home 2nd leg)
+
+FINAL: SF1 winner vs SF2 winner (May 30, Budapest)
+```
 
 ### UCL Winner Probabilities
 
 | Rank | Team | AI Win% | Polymarket | Edge | Signal |
 |------|------|---------|------------|------|--------|
-| 1 | **Arsenal** | **42.7%** | 25.5% | **+17.2%** | **STRONG BUY** |
-| 2 | Bayern Munich | 32.3% | 31.5% | +0.8% | — |
-| 3 | PSG | 15.9% | 21.5% | -5.6% | **STRONG SELL** |
-| 4 | Atletico Madrid | 4.6% | 7.1% | -2.5% | — |
-| 5 | Barcelona | 2.0% | 7.6% | -5.6% | **STRONG SELL** |
-| 6 | Real Madrid | 1.3% | 5.3% | -4.1% | SELL |
-| 7 | Liverpool | 0.7% | 2.1% | -1.4% | — |
-| 8 | Sporting CP | 0.5% | 0.7% | -0.2% | — |
+| 1 | **Arsenal** | **39.8%** | 28.5% | **+11.3%** | **STRONG BUY** |
+| 2 | Bayern Munich | 34.9% | 33.5% | +1.4% | — |
+| 3 | PSG | 20.4% | 25.5% | -5.1% | **STRONG SELL** |
+| 4 | Atletico Madrid | 4.8% | 11.3% | -6.5% | **STRONG SELL** |
 
-### QF Advancement Probabilities (Who Reaches Semis?)
+### SF Advancement Probabilities
 
-| Team | AI Adv% | Polymarket | Edge | Signal |
-|------|---------|------------|------|--------|
-| Arsenal | **95.5%** | 89.5% | **+6.0%** | **STRONG BUY** |
-| **Bayern Munich** | **91.9%** | **84.0%** | **+7.9%** | **STRONG BUY** |
-| PSG | 89.9% | 87.5% | +2.4% | — |
-| **Atletico Madrid** | **86.6%** | **72.0%** | **+14.6%** | **STRONG BUY** |
-| **Barcelona** | **13.4%** | **30.5%** | **-17.1%** | **STRONG SELL** |
-| Liverpool | 10.1% | 12.5% | -2.4% | — |
-| **Real Madrid** | **8.1%** | **16.0%** | **-7.9%** | **STRONG SELL** |
-| **Sporting CP** | **4.5%** | **10.5%** | **-6.0%** | **STRONG SELL** |
+| Team | AI SF Adv% | AI Final% | AI Champion% |
+|------|-----------|-----------|-------------|
+| **Arsenal** | **81.3%** | **81.3%** | **39.8%** |
+| Bayern Munich | 60.0% | 60.0% | 34.9% |
+| PSG | 40.0% | 40.0% | 20.4% |
+| Atletico Madrid | 18.7% | 18.7% | 4.8% |
 
-### Per-Model Breakdown (P(Champion))
+### Biggest Edges
 
-| Team | Chronos-2 | TimesFM-2.5 | FlowState | Elo Baseline | **Ensemble** |
-|------|-----------|-------------|-----------|-------------|:------------|
-| Arsenal | 42.9% | 43.0% | 42.8% | 42.1% | **42.7%** |
-| Bayern Munich | 32.1% | 32.2% | 32.7% | 32.4% | **32.3%** |
-| PSG | 15.9% | 15.9% | 15.8% | 16.0% | **15.9%** |
-| Atletico Madrid | 4.6% | 4.6% | 4.5% | 4.7% | **4.6%** |
-| Barcelona | 2.1% | 2.1% | 2.0% | 1.9% | **2.0%** |
-| Real Madrid | 1.3% | 1.3% | 1.2% | 1.3% | **1.3%** |
-| Liverpool | 0.7% | 0.7% | 0.7% | 0.7% | **0.7%** |
-| Sporting CP | 0.5% | 0.5% | 0.5% | 0.5% | **0.5%** |
+| Team | Market | AI | Mkt | Edge | Signal |
+|------|--------|-----|------|------|--------|
+| **Arsenal** | Winner | 39.8% | 28.5% | +11.3% | **STRONG BUY** |
+| Atletico Madrid | Winner | 4.8% | 11.3% | -6.5% | **STRONG SELL** |
+| PSG | Winner | 20.4% | 25.5% | -5.1% | **STRONG SELL** |
 
-## Biggest Edges
+### Adjusted Elo Ratings (post-QF, pre-SF)
 
-| Team | Market | AI | Mkt | Edge | Kelly | Signal |
-|------|--------|-----|------|------|-------|--------|
-| Arsenal | Winner | 42.7% | 25.5% | +17.2% | 11.5% | **STRONG BUY** |
-| Barcelona | QF Adv | 13.4% | 30.5% | -17.1% | — | **STRONG SELL** |
-| Atletico Madrid | QF Adv | 86.6% | 72.0% | +14.6% | 26.0% | **STRONG BUY** |
-| Bayern Munich | QF Adv | 91.9% | 84.0% | +7.9% | 24.7% | **STRONG BUY** |
-| Real Madrid | QF Adv | 8.1% | 16.0% | -7.9% | — | **STRONG SELL** |
-| Arsenal | QF Adv | 95.5% | 89.5% | +6.0% | 27.3% | **STRONG BUY** |
-| Sporting CP | QF Adv | 4.5% | 10.5% | -6.0% | — | **STRONG SELL** |
-| Barcelona | Winner | 2.0% | 7.6% | -5.6% | — | **STRONG SELL** |
-| PSG | Winner | 15.9% | 21.5% | -5.6% | — | **STRONG SELL** |
+| Team | Base Elo | After 1st-leg adj | After 2nd-leg adj | After injuries | Net Δ |
+|------|----------|-------------------|-------------------|----------------|-------|
+| Bayern Munich | 2020.9 | 2026.8 (+5.9) | 2016.8 (-10.0) | 2008.2 (-8.6) | -12.7 |
+| Arsenal | 2049.9 | 2048.6 (-1.2) | 2034.3 (-14.3) | 1989.3 (-45.0) | -60.6 |
+| PSG | 1974.0 | 1985.8 (+11.8) | 1987.1 (+1.3) | 1976.8 (-10.3) | +2.8 |
+| Atletico Madrid | 1862.0 | 1878.6 (+16.6) | 1872.8 (-5.7) | 1860.3 (-12.5) | -1.7 |
 
 ### Real xG from FotMob (extracted via Playwright + residential proxy)
 
-| Leg | Match | Score | xG | xG Delta vs Placeholder |
-|-----|-------|-------|-----|-------------------------|
-| QF1 | PSG vs Liverpool | 2-0 | **2.35 - 0.17** | PSG way more dominant than scoreline |
-| QF2 | Real Madrid vs Bayern | 1-2 | **2.22 - 2.92** | Both teams attacked heavily |
-| QF3 | Barcelona vs Atletico | 0-2 | **1.10 - 0.43** | **Barça had MORE xG but lost** — unlucky |
-| QF4 | Sporting vs Arsenal | 0-1 | **0.72 - 1.32** | Close to placeholder |
+**First Legs (fetched 2026-04-13):**
 
-**Biggest correction from placeholder → real xG**:
-- **PSG champion% +1.1pp** (14.6% → 15.7%): real dominance vs Liverpool (2.35 xG) was higher than placeholder assumed
-- **Barcelona QF advance +1.7pp** (11.4% → 13.1%): their positive xG differential vs Atleti showed they were unlucky, not bad
-- **Atletico champion% -0.9pp** (5.6% → 4.7%): their road win was actually less dominant than the 0-2 scoreline suggested (0.43 xG vs 1.10)
+| QF | Match | Score | xG (home-away) |
+|----|-------|-------|----------------|
+| QF1 | PSG vs Liverpool | 2-0 | **2.35 - 0.17** (PSG dominated) |
+| QF2 | Real Madrid vs Bayern | 1-2 | **2.22 - 2.92** (both attacked) |
+| QF3 | Barcelona vs Atletico | 0-2 | **1.10 - 0.43** (Barça better xG but lost) |
+| QF4 | Sporting vs Arsenal | 0-1 | **0.72 - 1.32** |
 
-## Injury-Adjusted Elo (April 12, 2026 snapshot)
+**Second Legs (fetched 2026-04-16):**
 
-Pulled live from FotMob per-team endpoints. Each injured player contributes
-`tier_base × availability_weight` of Elo penalty to their team; cap = 60 Elo per team.
+| QF | Match | Score | xG (home-away) |
+|----|-------|-------|----------------|
+| QF1 | Liverpool vs PSG | 0-2 | **1.97 - 1.09** (Liverpool better xG, PSG clinical) |
+| QF2 | Bayern vs Real Madrid | 4-3 | **2.14 - 2.42** (Real edged xG in wild game) |
+| QF3 | Atletico vs Barcelona | 1-2 | **1.77 - 2.22** (Barça dominated again) |
+| QF4 | Arsenal vs Sporting | 0-0 | **0.64 - 0.29** (lowest combined xG of the QFs) |
 
-| Team | ΔElo | Injured | Biggest hit |
+### Injury Impact (April 16, 2026 — SF semifinalists only)
+
+| Team | ΔElo | Players | Key absences |
 |------|------|---------|-------------|
-| **Arsenal** | **−46.5** | 5 | Saka (€98M, Doubtful), Ødegaard (€72M), Timber (€65M), Calafiori (€51M), Merino (€40M) |
-| **Liverpool** | **−26.7** | 6 | Jones (€49M, Doubtful), Bradley (€39M, out for season), Leoni (€31M), Alisson (€17M) |
-| Barcelona | −11.1 | 4 | Raphinha (€77M, Early May) |
-| Bayern Munich | −9.1 | 5 | Karl (€39M, Late April) |
-| Sporting CP | −7.8 | 3 | Ioannidis (€23M, Doubtful) |
-| Real Madrid | −6.8 | 2 | Rodrygo (€56M, Early Dec — out), Courtois (€11M) |
-| PSG | −5.5 | 3 | Barcola (€71M, Late April), Fabián (€28M) |
-| Atletico Madrid | −5.0 | 2 | Hancko (€35M, Doubtful), Giménez (€14M) |
+| **Arsenal** | **−45.0** | 5 | Saka (€98M, Doubtful), Ødegaard (€72M), Timber (€65M), Calafiori (€51M), Merino (€40M) |
+| Atletico Madrid | −12.5 | 3 | Barrios (€57M, Doubtful) |
+| PSG | −10.3 | 4 | Barcola (€71M) |
+| Bayern Munich | −8.6 | 5 | Relatively minor |
 
-**Effect on predictions** (vs xG-only April 12 run):
-
-- **Arsenal winner: 53.8% → 44.2% (−9.6pp)** — the injury pile-up (especially Saka doubtful) is the single biggest model revision of the day
-- **Bayern winner: 27.0% → 31.2% (+4.2pp)** — Arsenal's loss is everyone else's gain; Bayern now nearly ties the market price (31.2% vs 32.0%)
-- **PSG winner: 11.3% → 14.6% (+3.3pp)** — narrower STRONG SELL; the bracket advantage Arsenal had is less crushing
-- **Atletico winner: 3.8% → 5.6%** (+1.8pp)
-- **QF advance changes are small** (all already high) — injuries mostly reshape SF/Final conditional probabilities
-
-**Why the signal is so lopsided toward Arsenal**: the doubtful list includes Saka, Ødegaard, Timber, Calafiori, and Merino — five of their top six starters. Even conservatively weighting "Doubtful" at 0.5, that's cumulative -46.5 Elo, nearly the per-team cap.
+**Arsenal's massive injury penalty (−45.0 Elo)** is the single biggest factor keeping their champion probability "only" at 39.8% despite having the highest base Elo. Without injuries, they'd be a ~55%+ favorite.
 
 ## Closing Line Value (CLV) Tracking — The Real Edge Test
 
@@ -136,7 +127,7 @@ python scripts/clv_report.py
 - **`backtest/clv.py`** — pairs signals ↔ closings, computes mean CLV, SD, t-statistic, one-sided p-value, plus per-direction and per-strength breakdowns
 - **`scripts/clv_report.py`** — generates `results/clv_report.md` and `results/clv_report.csv`
 
-**Current CLV sample**: N=11 signals logged for 4/14 match day (first data point). Real signal will only emerge after multiple match days × multiple rounds.
+**Current CLV sample**: N=14 signals logged across QF match days. QF second legs are now resolved — first CLV data points can be computed. Real signal will only emerge after SF + Final rounds provide additional data.
 
 ## Model vs Market (the Dumb Baseline)
 
@@ -171,7 +162,7 @@ python scripts/market_benchmark_report.py          # recomputes BSS + t-test
 
 Report lands in `results/market_benchmark.md` and `results/market_benchmark.csv`.
 
-**Current sample: 0 resolved events.** First data points arrive after QF second legs resolve (Apr 14-15, 2026). After the full remaining UCL (QF 2nd legs + SF + Final) we'll have ~10-15 (qf_advance) + 1 (winner) data points — still small but the framework will scale across future competitions.
+**Current sample: QF results now resolved (Apr 14-15).** First data points are now available. After the full remaining UCL (SF + Final) we'll have ~10-15 (qf_advance + sf_advance) + 1 (winner) data points — still small but the framework will scale across future competitions.
 
 **Until BSS > 0 is demonstrated, no "beats the market" claim is made.**
 
@@ -208,7 +199,7 @@ python scripts/pnl_report.py --kelly 0.25      # quarter-Kelly variant
 python scripts/pnl_report.py --min-edge 5      # stricter signal filter
 ```
 
-**Current sample: 0 bets.** The forward test begins when tonight's QF second legs resolve. Expected sample by the time the final plays (May 30): ~10-14 Kelly-eligible bets (plus 1 winner-market bet that resolves once). That's still too small for meaningful Sharpe, but the trajectory is trackable and the framework extends trivially to the next competition.
+**Current sample: QF bets now resolvable.** Expected sample by the time the final plays (May 30): ~10-14 Kelly-eligible bets (plus 1 winner-market bet that resolves once). That's still too small for meaningful Sharpe, but the trajectory is trackable and the framework extends trivially to the next competition.
 
 **No ROI claim** is made until at least 30 resolved bets are in the log.
 
@@ -374,25 +365,29 @@ Layer 3 re-frames the task to match the live pipeline: for each 2-legged tie, at
 
 **Injury layer also not backtested**: FotMob's `/teams` endpoint returns *current* injury list only, no historical snapshots. Historical injury data would need a separate source (Transfermarkt has partial archive but requires scraping).
 
-## First-Leg Elo Adjustment (xG-weighted)
+## QF Elo Adjustments (xG-weighted, both legs)
 
-The April 12 update applies a performance-based Elo bump after each first leg:
+Each QF leg applies a performance-based Elo bump: `ΔElo = K × clip(effective_gd - expected_gd, ±2.5)` where `effective_gd = 0.6×xG_gd + 0.4×actual_gd`.
 
-| Leg | Match | Expected GD (Elo) | Effective GD (xG-blend) | Residual | ΔElo |
-|-----|-------|-------------------|-------------------------|----------|------|
-| QF1 | PSG 2-0 Liverpool | +0.78 | +1.28 | +0.50 | **+5.03** to PSG |
-| QF2 | Real 1-2 Bayern | -0.09 | -0.34 | -0.25 | **+2.54** to Bayern |
-| QF3 | Barça 0-2 Atleti | +1.15 | -1.28 | -2.43 (capped) | **+24.29** to Atleti |
-| QF4 | Sporting 0-1 Arsenal | -0.99 | -0.70 | +0.29 | **+2.92** to Sporting |
+**First-Leg Adjustments:**
 
-**Effect on predictions** (vs non-adjusted April 12 run):
-- **PSG winner**: 10.3% → 11.3% (+1.0pp) — modest xG advantage vs Liverpool shows through
-- **Atletico winner**: 2.5% → 3.8% (+1.3pp) — model catches their road-domination signal
-- **Atletico QF advance**: 82.5% → 88.1% (+5.6pp)
-- **Barcelona QF advance**: 17.5% → 11.9% (-5.6pp) — worst xG performance in the QFs
-- **Arsenal winner**: 55.6% → 53.8% (-1.8pp) — slight penalty for 1-0 win they were expected to dominate
+| QF | Match | Elo Exp GD | Effective GD | ΔElo |
+|----|-------|-----------|-------------|------|
+| QF1 | PSG 2-0 Liverpool | +0.93 | +2.11 | **+11.8** to PSG |
+| QF2 | Real 1-2 Bayern | -0.23 | -0.82 | **+5.9** to Bayern |
+| QF3 | Barça 0-2 Atleti | +1.26 | -0.40 | **+16.6** to Atletico |
+| QF4 | Sporting 0-1 Arsenal | -0.88 | -0.76 | **+1.2** to Sporting |
 
-The adjustment answers the earlier question *"why is PSG so bearish?"* — PSG bumps +1pp from xG, but the bracket (Bayern in SF, Arsenal in Final) still dominates the projection. **The bearish signal on PSG is bracket-driven, not model myopia.**
+**Second-Leg Adjustments:**
+
+| QF | Match | Elo Exp GD | Effective GD | ΔElo |
+|----|-------|-----------|-------------|------|
+| QF1 | Liverpool 0-2 PSG | -0.14 | -0.27 | **+1.3** to PSG |
+| QF2 | Bayern 4-3 Real | +1.24 | +0.23 | **+10.0** to Real Madrid |
+| QF3 | Atleti 1-2 Barça | -0.10 | -0.67 | **+5.7** to Barcelona |
+| QF4 | Arsenal 0-0 Sporting | +1.64 | +0.21 | **+14.3** to Sporting |
+
+**Key insight from second-leg adjustments**: Bayern's 4-3 home win was actually below Elo expectation (they should have dominated more), costing them -10 Elo. Arsenal's 0-0 draw at home when expected to score ~1.6 goals cost them -14.3 Elo. These second-leg regressions are why Bayern and Arsenal's champion probabilities are lower than their raw Elo would suggest.
 
 ## Visualizations
 
@@ -419,8 +414,12 @@ The adjustment answers the earlier question *"why is PSG so bearish?"* — PSG b
 clubelo.com current-date Elo for 8 teams
                     │
                     ▼
-       First-leg Elo adjustment
+       QF first-leg Elo adjustment
     xG-blended residual vs Elo expectation
+                    │
+                    ▼
+       QF second-leg Elo adjustment
+    (same methodology, second-leg data)
      → ΔElo feeds SF/Final simulations
                     │
                     ▼
@@ -446,15 +445,18 @@ clubelo.com current-date Elo for 8 teams
 └─────────────────────────────────────────┘
                     │
                     ▼
+      QFs resolved → known 4 semifinalists
+                    │
+                    ▼
           Two-legged tie simulation
     (aggregate scoring, ET, penalties)
                     │
                     ▼
         50,000 Monte Carlo bracket sims
-        QF (2nd legs) → SF → Final
+              SF → Final
                     │
                     ▼
-       P(advance) and P(champion) per team
+       P(sf_advance), P(final), P(champion)
                     │
                     ▼
          Polymarket edge detection
@@ -492,28 +494,26 @@ clubelo.com current-date Elo for 8 teams
 - **Injuries**: [FotMob](https://www.fotmob.com) per-team squad endpoint — returns live injury list, expected return date, and player market value. Augment with `config.MANUAL_INJURY_OVERRIDES` for anything FotMob misses.
 - **Models**: HuggingFace (Chronos-2, TimesFM-2.5, FlowState)
 
-## Current State (April 12, 2026 — Pre-Second-Leg)
+## Current State (April 16, 2026 — Semifinal Stage)
 
-First legs completed April 8-9. **Second legs are April 14-15, 2026** (2 days away).
+Quarterfinals completed April 14-15. All four favorites from the model's pre-QF predictions advanced (PSG, Bayern, Atletico, Arsenal).
 
 ```
 SILVER PATH                              BLUE PATH
-QF1: PSG 2-0 Liverpool        (1st leg)  QF3: Barcelona 0-2 Atletico Madrid  (1st leg)
-QF2: Real Madrid 1-2 Bayern   (1st leg)  QF4: Sporting CP 0-1 Arsenal        (1st leg)
+QF1: PSG 4-0 Liverpool  ✅               QF3: Atletico 3-2 Barcelona  ✅
+QF2: Bayern 6-4 Real Madrid  ✅          QF4: Arsenal 1-0 Sporting CP  ✅
 
-QF1 2nd leg: Liverpool vs PSG (Apr 15)   QF3 2nd leg: Atletico vs Barça (Apr 14)
-QF2 2nd leg: Bayern vs Real   (Apr 15)   QF4 2nd leg: Arsenal vs Sporting (Apr 14)
-
-SF1: QF1 winner vs QF2 winner            SF2: QF3 winner vs QF4 winner
-     (Apr 28-29 / May 5-6)                    (Apr 28-29 / May 5-6)
+SF1: PSG vs Bayern Munich                SF2: Atletico Madrid vs Arsenal
+     (Apr 28/29 + May 5/6)                    (Apr 28/29 + May 5/6)
 
                     FINAL: SF1 vs SF2 (May 30, Budapest)
 ```
 
-PSG are the defending champions and lead 2-0 heading into the second leg. Three of
-four first-leg losers (Liverpool, Real Madrid, Barcelona, Sporting) face uphill
-aggregate deficits heading into the return legs — which is why the model concentrates
-probability mass on Arsenal, Bayern, PSG, and Atletico.
+**Key narratives entering the semis:**
+- **Arsenal** are the model's top pick (39.8%) but carrying 5 injury doubts (Saka, Ødegaard, Timber, Calafiori, Merino) that suppress their probability by ~15pp
+- **Bayern** had a wild 4-3 second leg vs Real Madrid; their adjusted Elo is slightly below base after conceding 3 at home
+- **PSG** were ruthlessly clinical across both legs vs Liverpool (4-0 agg, 2 Dembélé braces); xG shows PSG overperformed their chances
+- **Atletico** squeezed through 3-2 despite Barcelona dominating xG in both legs — they advanced on clinical finishing, not territorial control
 
 ## Usage
 

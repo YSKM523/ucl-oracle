@@ -17,10 +17,17 @@ from config import (
     FIRST_LEG_XG,
     INJURY_ADJUSTMENT_ENABLED,
     MONTE_CARLO_SIMULATIONS,
+    QF_RESOLVED,
+    QF_WINNERS,
     RESULTS_DIR,
+    SECOND_LEG_ADJUSTMENT_ENABLED,
+    SECOND_LEG_RESULTS,
+    SECOND_LEG_XG,
+    SF_TEAMS,
     UCL_TEAMS,
     UCL_WINNER_EVENT_SLUG,
     UCL_SEMIS_EVENT_SLUG,
+    UCL_FINALS_EVENT_SLUG,
 )
 from data.fetcher_clubelo import fetch_current_elos
 from data.fetcher_injuries import fetch_all_injuries
@@ -29,6 +36,7 @@ from markets.edge_detector import detect_edges, format_edge_report, kelly_fracti
 from markets.signal_log import append_signal
 from prediction.elo_adjuster import (
     adjust_elos_for_first_legs,
+    adjust_elos_for_second_legs,
     apply_injury_penalties,
     compute_injury_penalties,
     format_adjustments_report,
@@ -77,59 +85,82 @@ def run_elo_baseline() -> tuple[pd.DataFrame, dict[str, float]]:
     """Phase 1: Elo-baseline predictions."""
     print("=" * 70)
     print("UCL ORACLE — 2025-26 Champions League Predictions")
+    print("  Stage: SEMI-FINALS (QFs resolved)")
     print("=" * 70)
 
+    # Show QF results summary
+    print("\n  QF Results (completed 2026-04-14/15):")
+    for qf_id, fl in FIRST_LEG_RESULTS.items():
+        sl = SECOND_LEG_RESULTS[qf_id]
+        h1, a1 = fl["home"], fl["away"]  # 1st-leg home/away
+        h2, a2 = sl["home"], sl["away"]  # 2nd-leg home/away (reversed)
+        agg_h1 = fl["home_goals"] + sl["away_goals"]  # 1st-leg home total
+        agg_a1 = fl["away_goals"] + sl["home_goals"]  # 1st-leg away total
+        winner = QF_WINNERS[qf_id]
+        print(f"    {qf_id}: {h1} {fl['home_goals']}-{fl['away_goals']} {a1} | "
+              f"{h2} {sl['home_goals']}-{sl['away_goals']} {a2}  "
+              f"(agg: {winner} {max(agg_h1,agg_a1)}-{min(agg_h1,agg_a1)})")
+
+    print(f"\n  SF matchups:")
+    print(f"    SF1: PSG vs Bayern Munich")
+    print(f"    SF2: Atletico Madrid vs Arsenal")
+
     # Fetch current Elo
-    print("\n[1/3] Fetching club Elo ratings …")
+    print("\n[1/4] Fetching club Elo ratings …")
     elos = fetch_current_elos()
+    # Show only SF teams
     print(f"\n{'Team':20s} {'Elo':>8s}")
     print("-" * 30)
-    for team in sorted(elos, key=elos.get, reverse=True):
-        print(f"  {team:20s} {elos[team]:7.1f}")
+    for team in sorted(SF_TEAMS, key=lambda t: elos.get(t, 0), reverse=True):
+        print(f"  {team:20s} {elos.get(team, 0):7.1f}")
 
-    # Show first-leg context
-    print("\n[2/3] QF First-Leg Results (already played):")
-    xg_data = fetch_first_leg_xg() if FIRST_LEG_ADJUSTMENT_ENABLED else {}
-    for qf_id, fl in FIRST_LEG_RESULTS.items():
-        h, a = fl["home"], fl["away"]
-        hg, ag = fl["home_goals"], fl["away_goals"]
-        xg = xg_data.get(qf_id)
-        xg_str = (
-            f"  (xG: {xg['home_xg']:.2f}-{xg['away_xg']:.2f})" if xg else ""
-        )
-        print(f"  {qf_id}: {h} {hg}-{ag} {a}{xg_str}")
-
-    # First-leg Elo adjustment (feeds SF/Final sims; QF aggregates still use goals)
+    # First-leg Elo adjustment
     if FIRST_LEG_ADJUSTMENT_ENABLED:
-        print("\n  Applying first-leg Elo adjustments (xG-weighted performance residual):")
+        print("\n[2/4] Applying QF first-leg Elo adjustments:")
+        xg_data = fetch_first_leg_xg() if FIRST_LEG_ADJUSTMENT_ENABLED else {}
         before = dict(elos)
         elos, adjustments = adjust_elos_for_first_legs(elos, xg_data=xg_data)
         print(format_adjustments_report(adjustments, before, elos))
 
-    # Injury-based Elo penalty (feeds every stage from here on)
+    # Second-leg Elo adjustment
+    if SECOND_LEG_ADJUSTMENT_ENABLED:
+        print("\n  Applying QF second-leg Elo adjustments:")
+        before = dict(elos)
+        elos, adjustments2 = adjust_elos_for_second_legs(elos)
+        print(format_adjustments_report(adjustments2, before, elos))
+
+    # Injury-based Elo penalty
     if INJURY_ADJUSTMENT_ENABLED:
-        print("\n  Fetching injury lists from FotMob …")
+        print("\n[3/4] Fetching injury lists from FotMob …")
         injuries = fetch_all_injuries()
         team_deltas, breakdown = compute_injury_penalties(injuries)
         elos = apply_injury_penalties(elos, team_deltas)
         print(format_injury_report(team_deltas, breakdown))
 
-    # Monte Carlo
-    print(f"\n[3/3] Running {MONTE_CARLO_SIMULATIONS:,} Monte Carlo simulations …")
+    # Monte Carlo (only SF + Final now)
+    print(f"\n[4/4] Running {MONTE_CARLO_SIMULATIONS:,} Monte Carlo simulations (SF → Final) …")
     results_df = run_monte_carlo(elos, n_simulations=MONTE_CARLO_SIMULATIONS)
 
-    print(f"\n{'Team':20s} {'QF Adv':>8s} {'Final':>8s} {'Champion':>8s}")
+    # Filter to SF teams only for display
+    sf_df = results_df[results_df["team"].isin(SF_TEAMS)].copy()
+
+    print(f"\n{'Team':20s} {'SF Adv':>8s} {'Final':>8s} {'Champion':>8s}")
     print("-" * 48)
-    for _, row in results_df.iterrows():
+    for _, row in sf_df.iterrows():
         print(
             f"  {row['team']:20s}"
-            f" {row['P(qf_advance)']:7.1%}"
+            f" {row['P(sf_advance)']:7.1%}"
             f" {row['P(final)']:7.1%}"
             f" {row['P(champion)']:7.1%}"
         )
 
-    total = results_df["P(champion)"].sum()
+    total = sf_df["P(champion)"].sum()
     print(f"\n  P(champion) sum: {total:.4f}")
+
+    # Show adjusted Elos for SF teams
+    print(f"\n  Adjusted Elo ratings (post-QF):")
+    for team in sorted(SF_TEAMS, key=lambda t: elos.get(t, 0), reverse=True):
+        print(f"    {team:20s} {elos.get(team, 0):7.1f}")
 
     # Save
     results_df.to_csv(RESULTS_DIR / "predictions" / "elo_baseline.csv", index=False)
@@ -188,21 +219,21 @@ def run_polymarket_comparison(
     else:
         print("\n  UCL winner market: not found on Polymarket")
 
-    # ── QF advancement / Semis market ───────────────────────────────────
-    semis_df = odds.get("semis")
-    if semis_df is not None and not semis_df.empty:
-        print(f"\n--- QF ADVANCEMENT MARKET (Who reaches semis?) ---")
-        print(f"Event: {semis_df['event_title'].iloc[0]}")
-        print(f"Volume: ${semis_df['volume'].iloc[0]:,.0f}")
+    # ── SF advancement / Finals market ───────────────────────────────────
+    finals_df = odds.get("finals")
+    if finals_df is not None and not finals_df.empty:
+        print(f"\n--- SF ADVANCEMENT MARKET (Who reaches finals?) ---")
+        print(f"Event: {finals_df['event_title'].iloc[0]}")
+        print(f"Volume: ${finals_df['volume'].iloc[0]:,.0f}")
 
-        semis_market_probs = dict(zip(semis_df["team"], semis_df["implied_prob"]))
-        qf_advance_probs = dict(zip(results_df["team"], results_df["P(qf_advance)"]))
+        finals_market_probs = dict(zip(finals_df["team"], finals_df["implied_prob"]))
+        sf_advance_probs = dict(zip(results_df["team"], results_df["P(sf_advance)"]))
 
         print(f"\n{'Team':20s} {'AI Adv%':>8s} {'Mkt Adv%':>8s} {'Edge':>8s} {'Signal':>12s}")
         print("-" * 60)
-        for team in sorted(qf_advance_probs, key=qf_advance_probs.get, reverse=True):
-            ai_p = qf_advance_probs[team]
-            mkt_p = semis_market_probs.get(team, 0.0)
+        for team in sorted(sf_advance_probs, key=sf_advance_probs.get, reverse=True):
+            ai_p = sf_advance_probs[team]
+            mkt_p = finals_market_probs.get(team, 0.0)
             edge = (ai_p - mkt_p) * 100 if mkt_p > 0 else float("nan")
             signal = ""
             if mkt_p > 0:
@@ -214,15 +245,15 @@ def run_polymarket_comparison(
             edge_str = f"{edge:+7.1f}%" if mkt_p > 0 else "    N/A"
             print(f"  {team:20s} {ai_p:7.1%} {mkt_str} {edge_str} {signal:>12s}")
 
-        # Edge detection for advancement
-        adv_edges = detect_edges(qf_advance_probs, semis_market_probs)
+        # Edge detection for SF advancement
+        adv_edges = detect_edges(sf_advance_probs, finals_market_probs)
         if not adv_edges.empty:
-            print(f"\n--- QF ADVANCEMENT EDGES ---")
+            print(f"\n--- SF ADVANCEMENT EDGES ---")
             print(format_edge_report(adv_edges))
-            adv_edges.to_csv(RESULTS_DIR / "edges" / "qf_advance_edges.csv", index=False)
-            _log_edges(adv_edges, market_type="qf_advance", event_slug=UCL_SEMIS_EVENT_SLUG)
+            adv_edges.to_csv(RESULTS_DIR / "edges" / "sf_advance_edges.csv", index=False)
+            _log_edges(adv_edges, market_type="sf_advance", event_slug=UCL_FINALS_EVENT_SLUG)
     else:
-        print("\n  QF advancement market: not found on Polymarket")
+        print("\n  SF advancement market: not found on Polymarket")
 
 
 def run_tsfm_predictions() -> tuple[pd.DataFrame, dict[str, float]]:

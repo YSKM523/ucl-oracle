@@ -14,7 +14,7 @@ from typing import Optional
 
 import requests
 
-from config import FIRST_LEG_XG, UCL_TEAMS
+from config import FIRST_LEG_XG, SECOND_LEG_XG, UCL_TEAMS
 
 log = logging.getLogger(__name__)
 

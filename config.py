@@ -36,6 +36,28 @@ FIRST_LEG_RESULTS = {
     "QF4": {"home": "Sporting CP", "away": "Arsenal", "home_goals": 0, "away_goals": 1},
 }
 
+# ── Second-leg results (played 2026-04-14 / 2026-04-15) ──────────────────
+SECOND_LEG_RESULTS = {
+    "QF1": {"home": "Liverpool", "away": "PSG", "home_goals": 0, "away_goals": 2},
+    "QF2": {"home": "Bayern Munich", "away": "Real Madrid", "home_goals": 4, "away_goals": 3},
+    "QF3": {"home": "Atletico Madrid", "away": "Barcelona", "home_goals": 1, "away_goals": 2},
+    "QF4": {"home": "Arsenal", "away": "Sporting CP", "home_goals": 0, "away_goals": 0},
+}
+
+# ── QF winners (determined by aggregate) ──────────────────────────────────
+# QF1: PSG 4-0 Liverpool | QF2: Bayern 6-4 Real Madrid
+# QF3: Atletico 3-2 Barcelona | QF4: Arsenal 1-0 Sporting CP
+QF_RESOLVED = True
+QF_WINNERS = {
+    "QF1": "PSG",
+    "QF2": "Bayern Munich",
+    "QF3": "Atletico Madrid",
+    "QF4": "Arsenal",
+}
+
+# 4 semifinalists
+SF_TEAMS = ["PSG", "Bayern Munich", "Atletico Madrid", "Arsenal"]
+
 # ── First-leg xG (expected goals) ──────────────────────────────────────────
 # Real post-match xG from FotMob shotmap (fetched 2026-04-13 via Playwright
 # + residential proxy; see scripts/refresh_xg.py). Values = sum of per-shot
@@ -47,10 +69,19 @@ FIRST_LEG_XG = {
     "QF4": {"home_xg": 0.72, "away_xg": 1.32},   # Sporting 0-1 Arsenal
 }
 
-# ── First-leg Elo adjustment ───────────────────────────────────────────────
-# After first legs, bump each team's Elo based on how they performed vs the
-# Elo-implied expectation. This flows into SF/Final Monte Carlo (QF sims
-# continue to use actual first-leg goals for aggregate scoring).
+# ── Second-leg xG (expected goals) ────────────────────────────────────────
+# Real post-match xG from FotMob shotmap (fetched 2026-04-16 via Playwright
+# + residential proxy).
+SECOND_LEG_XG = {
+    "QF1": {"home_xg": 1.97, "away_xg": 1.09},   # Liverpool 0-2 PSG (Liverpool better xG but clinical PSG)
+    "QF2": {"home_xg": 2.14, "away_xg": 2.42},   # Bayern 4-3 Real   (wild game, Real slightly higher xG)
+    "QF3": {"home_xg": 1.77, "away_xg": 2.22},   # Atleti 1-2 Barça  (Barça dominated xG again)
+    "QF4": {"home_xg": 0.64, "away_xg": 0.29},   # Arsenal 0-0 Sporting (lowest xG of the QFs)
+}
+
+# ── QF Elo adjustment (both legs) ──────────────────────────────────────────
+# After QF legs, bump each team's Elo based on how they performed vs the
+# Elo-implied expectation. This flows into SF/Final Monte Carlo.
 #
 # effective_gd = α·(xg_home - xg_away) + (1-α)·(goals_home - goals_away)
 # residual     = effective_gd - poisson_expected_gd(Elo, home_adv)
@@ -61,8 +92,11 @@ FIRST_LEG_XG = {
 # CAP=2.5 prevents one anomalous blowout from dominating.
 XG_BLEND_ALPHA = 0.6
 FIRST_LEG_ELO_K = 10.0
+SECOND_LEG_ELO_K = 10.0
 FIRST_LEG_RESIDUAL_CAP = 2.5
+SECOND_LEG_RESIDUAL_CAP = 2.5
 FIRST_LEG_ADJUSTMENT_ENABLED = True
+SECOND_LEG_ADJUSTMENT_ENABLED = True
 
 # ── Injury-based Elo adjustment ────────────────────────────────────────────
 # FotMob per-team injury list → Elo penalty proportional to the injured
@@ -93,19 +127,19 @@ INJURY_TIERS = [
 ]
 
 # Maps FotMob `expectedReturn` → fraction of remaining UCL matches missed.
-# The remaining bracket is ~5 matches per team (QF2 + SF1 + SF2 + Final + buffer).
-# "Late April 2026" = misses QF 2nd leg; returns for SF onwards.
+# The remaining bracket is ~3 matches per team (SF1 + SF2 + Final).
+# "Late April 2026" = misses SF 1st leg; returns for SF 2nd leg onwards.
 INJURY_RETURN_WEIGHTS = {
     "out for season":           1.00,
     "out for 2026":             1.00,
     "early august 2026":        1.00,
-    "early june 2026":          0.80,
-    "late may 2026":            0.60,
-    "early may 2026":           0.40,
-    "late april 2026":          0.25,
-    "early april 2026":         0.15,
+    "early june 2026":          0.67,
+    "late may 2026":            0.50,
+    "early may 2026":           0.33,
+    "late april 2026":          0.20,
+    "early april 2026":         0.00,   # already returned
     "about 1-2 weeks":          0.20,
-    "about a week":             0.15,
+    "about a week":             0.10,
     "doubtful":                 0.50,
     "unknown":                  0.40,
 }
@@ -215,3 +249,4 @@ GAMMA_API_BASE = "https://gamma-api.polymarket.com"
 CLOB_API_BASE = "https://clob.polymarket.com"
 UCL_WINNER_EVENT_SLUG = "uefa-champions-league-winner"
 UCL_SEMIS_EVENT_SLUG = "uefa-champions-league-team-to-advance-to-semis"
+UCL_FINALS_EVENT_SLUG = "uefa-champions-league-team-to-advance-to-finals"

@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 import pandas as pd
 import requests
 
-from config import GAMMA_API_BASE, CLOB_API_BASE, UCL_WINNER_EVENT_SLUG, UCL_SEMIS_EVENT_SLUG
+from config import GAMMA_API_BASE, CLOB_API_BASE, UCL_WINNER_EVENT_SLUG, UCL_SEMIS_EVENT_SLUG, UCL_FINALS_EVENT_SLUG
 
 log = logging.getLogger(__name__)
 
@@ -221,12 +221,55 @@ class PolymarketClient:
         return None
 
 
+    def fetch_ucl_finals_odds(self) -> pd.DataFrame | None:
+        """Fetch UCL final advancement market odds (who reaches the final)."""
+        slugs = [
+            UCL_FINALS_EVENT_SLUG,
+            "champions-league-finalists",
+            "ucl-finals-2025-26",
+            "champions-league-team-to-reach-final",
+        ]
+
+        for slug in slugs:
+            event = self._get_event_by_slug(slug)
+            if event and event.get("markets"):
+                df = self._parse_ucl_markets(
+                    event["markets"], event,
+                    ["final", "advance"]
+                )
+                if df is not None and not df.empty:
+                    return df
+
+        # Fallback search
+        try:
+            resp = self.session.get(
+                f"{GAMMA_API_BASE}/events",
+                params={"limit": 100, "active": "true", "order": "volume", "ascending": "false"},
+                timeout=30,
+            )
+            resp.raise_for_status()
+            for event in resp.json():
+                title = event.get("title", "").lower()
+                if "champions league" in title and "final" in title and "winner" not in title:
+                    markets = event.get("markets", [])
+                    if markets:
+                        df = self._parse_ucl_markets(markets, event, ["final", "advance"])
+                        if df is not None and not df.empty:
+                            return df
+        except requests.RequestException as e:
+            log.warning("Fallback finals search failed: %s", e)
+
+        log.warning("Could not find UCL finals advancement market on Polymarket")
+        return None
+
+
 def fetch_all_ucl_odds() -> dict[str, pd.DataFrame | None]:
     """Fetch all UCL market odds."""
     client = PolymarketClient()
     return {
         "winner": client.fetch_ucl_winner_odds(),
         "semis": client.fetch_ucl_semis_odds(),
+        "finals": client.fetch_ucl_finals_odds(),
     }
 
 

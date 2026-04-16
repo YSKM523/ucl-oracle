@@ -1,9 +1,8 @@
-"""First-leg performance → Elo adjustment.
+"""QF performance → Elo adjustment (both legs).
 
-Updates each team's Elo after the QF first legs based on residual between
-observed performance (blended xG + actual goals) and Elo-implied expectation.
-The adjusted Elo is used for SF/Final Monte Carlo simulation, while QF sims
-still resolve aggregate ties from the actual first-leg scores.
+Updates each team's Elo after QF legs based on residual between observed
+performance (blended xG + actual goals) and Elo-implied expectation.
+The adjusted Elo is used for SF/Final Monte Carlo simulation.
 """
 
 from __future__ import annotations
@@ -20,6 +19,10 @@ from config import (
     INJURY_RETURN_WEIGHTS,
     INJURY_TIERS,
     INJURY_TOTAL_CAP,
+    SECOND_LEG_ELO_K,
+    SECOND_LEG_RESIDUAL_CAP,
+    SECOND_LEG_RESULTS,
+    SECOND_LEG_XG,
     UCL_HOME_ADVANTAGE_ELO,
     XG_BLEND_ALPHA,
 )
@@ -107,6 +110,66 @@ def adjust_elos_for_first_legs(
 ) -> tuple[dict[str, float], list[LegAdjustment]]:
     """Convenience wrapper: compute + apply first-leg Elo adjustments."""
     adjustments = compute_first_leg_adjustments(elos, xg_data=xg_data)
+    return apply_adjustments(elos, adjustments), adjustments
+
+
+def compute_second_leg_adjustments(
+    elos: dict[str, float],
+    xg_data: dict[str, dict[str, float]] | None = None,
+    alpha: float = XG_BLEND_ALPHA,
+    k: float = SECOND_LEG_ELO_K,
+    cap: float = SECOND_LEG_RESIDUAL_CAP,
+) -> list[LegAdjustment]:
+    """Compute per-leg ΔElo from second-leg performance vs Elo expectation."""
+    if xg_data is None:
+        xg_data = SECOND_LEG_XG
+    adjustments: list[LegAdjustment] = []
+
+    for qf_id, leg in SECOND_LEG_RESULTS.items():
+        home, away = leg["home"], leg["away"]
+        if home not in elos or away not in elos:
+            continue
+        gh, ga = leg["home_goals"], leg["away_goals"]
+        observed_gd = gh - ga
+
+        xg_leg = xg_data.get(qf_id)
+        if xg_leg is not None:
+            xgd = xg_leg["home_xg"] - xg_leg["away_xg"]
+            effective_gd = alpha * xgd + (1 - alpha) * observed_gd
+        else:
+            effective_gd = observed_gd
+
+        lam_h, lam_a = poisson_expected_goals(
+            elos[home], elos[away], home_advantage=UCL_HOME_ADVANTAGE_ELO
+        )
+        expected_gd = lam_h - lam_a
+
+        residual = effective_gd - expected_gd
+        residual_clipped = max(-cap, min(cap, residual))
+        delta = k * residual_clipped
+
+        adjustments.append(
+            LegAdjustment(
+                qf_id=qf_id,
+                home=home,
+                away=away,
+                expected_gd=expected_gd,
+                observed_gd=observed_gd,
+                effective_gd=effective_gd,
+                residual=residual,
+                delta_elo=delta,
+            )
+        )
+
+    return adjustments
+
+
+def adjust_elos_for_second_legs(
+    elos: dict[str, float],
+    xg_data: dict[str, dict[str, float]] | None = None,
+) -> tuple[dict[str, float], list[LegAdjustment]]:
+    """Convenience wrapper: compute + apply second-leg Elo adjustments."""
+    adjustments = compute_second_leg_adjustments(elos, xg_data=xg_data)
     return apply_adjustments(elos, adjustments), adjustments
 
 
